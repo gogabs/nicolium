@@ -1,4 +1,4 @@
-import { Card, Icon, Text, TouchableRipple } from '@mkljczk/react-native-paper';
+import { Card, Icon, Text } from '@mkljczk/react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { LinkSimpleIcon } from 'phosphor-react-native';
 import React from 'react';
@@ -16,29 +16,27 @@ const TrendsLink: React.FC<ITrendsLink> = ({ link }) => {
   const navigation = useNavigation();
 
   return (
-    <TouchableRipple
+    <Card
       onPress={() => {
         navigation.navigate('links', { url: link.url });
       }}
     >
-      <Card>
-        {link.image && (
-          <Card.Cover
-            source={{ uri: link.image }}
-            accessibilityLabel={link.image_description || undefined}
-          />
-        )}
-        <Card.Content style={{ gap: 4 }}>
-          <Text variant='titleMedium' numberOfLines={2}>
-            {link.title}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Icon source={iconHelper(LinkSimpleIcon)} size={20} />
-            <Text variant='bodyMedium'>{link.provider_name}</Text>
-          </View>
-        </Card.Content>
-      </Card>
-    </TouchableRipple>
+      {link.image && (
+        <Card.Cover
+          source={{ uri: link.image }}
+          accessibilityLabel={link.image_description || undefined}
+        />
+      )}
+      <Card.Content style={{ gap: 4 }}>
+        <Text variant='titleMedium' numberOfLines={2}>
+          {link.title}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Icon source={iconHelper(LinkSimpleIcon)} size={20} />
+          <Text variant='bodyMedium'>{link.provider_name}</Text>
+        </View>
+      </Card.Content>
+    </Card>
   );
 };
 

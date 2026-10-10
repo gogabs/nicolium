@@ -61,33 +61,35 @@ const UIStatus: React.FC<IUIStatus> = ({
     <View style={[{ flexDirection: 'column', gap: 8 }, isConnectedBottom && { flex: 1 }]}>
       {displayedMentions}
       {!textOnly && spoilerText && (
-        <TouchableRipple onPress={spoilerExpanded ? collapseStatusSpoiler : expandStatusSpoiler}>
-          <Card mode='contained' style={{ borderWidth: 1, borderColor: theme.colors.primary }}>
-            <Card.Content style={{ paddingBottom: expandStatusSpoiler ? 0 : 16 }}>
-              <Text
-                variant='titleSmall'
-                numberOfLines={!(detailed || spoilerExpanded) ? 1 : undefined}
+        <Card
+          mode='contained'
+          style={{ borderWidth: 1, borderColor: theme.colors.primary }}
+          onPress={spoilerExpanded ? collapseStatusSpoiler : expandStatusSpoiler}
+        >
+          <Card.Content style={{ paddingBottom: expandStatusSpoiler ? 0 : 16 }}>
+            <Text
+              variant='titleSmall'
+              numberOfLines={!(detailed || spoilerExpanded) ? 1 : undefined}
+            >
+              {emojis ? <Emojify text={spoilerText} emojis={emojis} /> : spoilerText}
+            </Text>
+          </Card.Content>
+          {expandStatusSpoiler && (
+            <Card.Actions style={{ paddingTop: 0 }}>
+              <Button
+                mode='text'
+                compact
+                onPress={spoilerExpanded ? collapseStatusSpoiler : expandStatusSpoiler}
               >
-                {emojis ? <Emojify text={spoilerText} emojis={emojis} /> : spoilerText}
-              </Text>
-            </Card.Content>
-            {expandStatusSpoiler && (
-              <Card.Actions style={{ paddingTop: 0 }}>
-                <Button
-                  mode='text'
-                  compact
-                  onPress={spoilerExpanded ? collapseStatusSpoiler : expandStatusSpoiler}
-                >
-                  {spoilerExpanded ? (
-                    <FormattedMessage id='status.collapse' defaultMessage='Collapse' />
-                  ) : (
-                    <FormattedMessage id='status.read_more' defaultMessage='Read more' />
-                  )}
-                </Button>
-              </Card.Actions>
-            )}
-          </Card>
-        </TouchableRipple>
+                {spoilerExpanded ? (
+                  <FormattedMessage id='status.collapse' defaultMessage='Collapse' />
+                ) : (
+                  <FormattedMessage id='status.read_more' defaultMessage='Read more' />
+                )}
+              </Button>
+            </Card.Actions>
+          )}
+        </Card>
       )}
       {(textOnly || !spoilerText || !expandStatusSpoiler || spoilerExpanded) && (
         <>
