@@ -1,20 +1,37 @@
-import { ActivityIndicator, Divider, useTheme } from '@mkljczk/react-native-paper';
+import {
+  ActivityIndicator,
+  Appbar,
+  Button,
+  Checkbox,
+  Dialog,
+  Divider,
+  List,
+  Text,
+  useTheme,
+} from '@mkljczk/react-native-paper';
 import {
   createNativeStackNavigator,
+  type NativeStackHeaderProps,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { FlashList } from '@shopify/flash-list';
-import React from 'react';
+import { ChecksIcon, FunnelIcon } from 'phosphor-react-native';
+import React, { useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Tabs, TabScreen, TabsProvider } from 'react-native-paper-tabs';
 
 import { Notification } from '@/components/notification';
 import { EmptyMessage } from '@/components/ui/empty-message';
-import { Header } from '@/components/ui/header';
+import { iconHelper } from '@/components/ui/icon';
 import { LoadMore } from '@/components/ui/load-more';
-import { useNotifications } from '@/queries/notifications/use-notifications';
-import { useSetting } from '@/stores/settings';
+import { useFeatures } from '@/contexts/current-account-context';
+import {
+  useMarkNotificationsReadMutation,
+  useNotifications,
+  useNotificationsUnreadCount,
+} from '@/queries/notifications/use-notifications';
+import { useSetting, useSettingsActions } from '@/stores/settings';
 
 import type { NotificationsStackParams } from '../router';
 
@@ -23,13 +40,211 @@ const messages = defineMessages({
   tabMentions: { id: 'notifications.filter_mentions', defaultMessage: 'Mentions' },
 });
 
+const ALL_FILTERS = [
+  'mention',
+  'favourite',
+  'reblog',
+  'poll',
+  'status',
+  'follow',
+  'events',
+] as const;
+
+interface IFiltersDialog {
+  visible: boolean;
+  setVisible: (value: boolean) => void;
+}
+
+const FiltersDialog: React.FC<IFiltersDialog> = ({ visible, setVisible }) => {
+  const { colors } = useTheme();
+  const features = useFeatures();
+
+  const filters = useSetting('notifications.filters');
+  const { update } = useSettingsActions();
+
+  const [newFilters, setNewFilters] = useState<typeof filters>(() => {
+    if (filters.length === 0) return ALL_FILTERS;
+    return filters;
+  });
+
+  const getStatus = (key: (typeof filters)[0]) => {
+    if (newFilters.length === 0) return 'checked';
+    if (newFilters.includes(key)) return 'checked';
+    return 'unchecked';
+  };
+
+  const toggleFilters = (key: (typeof filters)[0]) => () => {
+    if (newFilters.includes(key)) {
+      setNewFilters((filters) => filters.filter((value) => value !== key));
+    } else {
+      setNewFilters((filters) => [...filters, key]);
+    }
+  };
+
+  return (
+    <Dialog visible={visible} onDismiss={() => setVisible(false)}>
+      <Dialog.Title>
+        <FormattedMessage
+          id='notifications.filters.heading'
+          defaultMessage='Visible notifications'
+        />
+      </Dialog.Title>
+      <Dialog.ScrollArea>
+        <ScrollView>
+          <List.Item
+            title={
+              <FormattedMessage id='notifications.filters.mention' defaultMessage='Mentions' />
+            }
+            left={() => (
+              <Checkbox status={getStatus('mention')} onPress={toggleFilters('mention')} />
+            )}
+            onPress={toggleFilters('mention')}
+          />
+          <List.Item
+            title={<FormattedMessage id='notifications.filters.favourite' defaultMessage='Likes' />}
+            left={() => (
+              <Checkbox status={getStatus('favourite')} onPress={toggleFilters('favourite')} />
+            )}
+            onPress={toggleFilters('favourite')}
+          />
+          <List.Item
+            title={<FormattedMessage id='notifications.filters.reblog' defaultMessage='Reposts' />}
+            left={() => <Checkbox status={getStatus('reblog')} onPress={toggleFilters('reblog')} />}
+            onPress={toggleFilters('reblog')}
+          />
+          <List.Item
+            title={<FormattedMessage id='notifications.filters.poll' defaultMessage='Polls' />}
+            left={() => <Checkbox status={getStatus('poll')} onPress={toggleFilters('poll')} />}
+            onPress={toggleFilters('poll')}
+          />
+          {features.accountNotifies && (
+            <List.Item
+              title={
+                <FormattedMessage
+                  id='notifications.filters.status'
+                  defaultMessage='Account subscriptions'
+                />
+              }
+              left={() => (
+                <Checkbox status={getStatus('status')} onPress={toggleFilters('status')} />
+              )}
+              onPress={toggleFilters('status')}
+            />
+          )}
+          <List.Item
+            title={<FormattedMessage id='notifications.filters.follow' defaultMessage='Follows' />}
+            left={() => <Checkbox status={getStatus('follow')} onPress={toggleFilters('follow')} />}
+            onPress={toggleFilters('follow')}
+          />
+          {features.events && (
+            <List.Item
+              title={<FormattedMessage id='notifications.filters.events' defaultMessage='Events' />}
+              left={() => (
+                <Checkbox status={getStatus('events')} onPress={toggleFilters('events')} />
+              )}
+              onPress={toggleFilters('events')}
+            />
+          )}
+        </ScrollView>
+      </Dialog.ScrollArea>
+      <Dialog.Actions>
+        <Button onPress={() => setVisible(false)}>
+          <FormattedMessage id='common.cancel' defaultMessage='Cancel' />
+        </Button>
+        <View style={{ flex: 1 }} />
+        <Button
+          onPress={() => {
+            setVisible(false);
+            update('notifications.filters', []);
+          }}
+          textColor={colors.error}
+        >
+          <FormattedMessage id='notifications.filters.reset' defaultMessage='Reset' />
+        </Button>
+        <Button
+          onPress={
+            newFilters.length === 0
+              ? undefined
+              : () => {
+                  setVisible(false);
+                  update(
+                    'notifications.filters',
+                    newFilters.length === ALL_FILTERS.length ? [] : newFilters,
+                  );
+                }
+          }
+          disabled={newFilters.length === 0}
+        >
+          <FormattedMessage id='common.save' defaultMessage='Save' />
+        </Button>
+      </Dialog.Actions>
+    </Dialog>
+  );
+};
+
+const NotificationsMarkReadButton = () => {
+  const notificationCount = useNotificationsUnreadCount();
+  const { mutate: markNotificationsRead } = useMarkNotificationsReadMutation();
+
+  const { data: notifications = [] } = useNotifications([]);
+
+  const handleClick = () => {
+    markNotificationsRead(
+      notifications[0]?.page_max_id ?? notifications[0]?.most_recent_notification_id,
+    );
+  };
+
+  return (
+    <Appbar.Action
+      icon={iconHelper(ChecksIcon)}
+      disabled={!notificationCount}
+      onPress={handleClick}
+    />
+  );
+};
+
+const TimelineHeader = ({ route }: NativeStackHeaderProps) => {
+  const { colors } = useTheme();
+
+  const [showFiltersDialog, setShowFiltersDialog] = React.useState(false);
+
+  return (
+    <>
+      <Appbar.Header
+        style={{
+          backgroundColor: colors.surfaceContainer,
+        }}
+      >
+        <Appbar.Content
+          title={
+            <Text variant='titleLarge'>
+              <FormattedMessage id='column.notifications' defaultMessage='Notifications' />
+            </Text>
+          }
+        />
+        {!route.params?.tab ||
+          (route.params?.tab === 'all' && (
+            <Appbar.Action
+              icon={iconHelper(FunnelIcon)}
+              onPress={() => setShowFiltersDialog(true)}
+            />
+          ))}
+        <NotificationsMarkReadButton />
+      </Appbar.Header>
+      <FiltersDialog visible={showFiltersDialog} setVisible={setShowFiltersDialog} />
+    </>
+  );
+};
+
 const LoadingIndicator = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
     <ActivityIndicator size='large' />
   </View>
 );
 
-const NotificationsScreen = (_props: NativeStackScreenProps<NotificationsStackParams, 'view'>) => {
+const NotificationsScreen = ({
+  navigation,
+}: NativeStackScreenProps<NotificationsStackParams, 'view'>) => {
   const intl = useIntl();
   const { colors } = useTheme();
 
@@ -42,7 +257,11 @@ const NotificationsScreen = (_props: NativeStackScreenProps<NotificationsStackPa
 
   const autoloadMore = useSetting('timelines.autoloadMore');
 
-  const handleChangeIndex = (index: number) => setCurrentTab(index ? 'mentions' : 'all');
+  const handleChangeIndex = (index: number) => {
+    const newTab = index === 1 ? 'mentions' : 'all';
+    setCurrentTab(newTab);
+    navigation.navigate('view', { tab: newTab });
+  };
 
   const renderNotifications = (tab: 'all' | 'mentions') => {
     const query = tab === 'all' ? notificationsQuery : mentionsNotificationsQuery;
@@ -110,7 +329,7 @@ const NotificationsStackScreen = () => {
       <NotificationsStack.Screen
         name='view'
         component={NotificationsScreen}
-        options={{ header: Header, title: 'Notifications' }}
+        options={{ header: TimelineHeader, title: 'Notifications' }}
       />
     </NotificationsStack.Navigator>
   );

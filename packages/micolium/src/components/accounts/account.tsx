@@ -5,7 +5,7 @@ import { useAccount } from '@/queries/accounts/use-account';
 
 import { type IUIAccount, UIAccount } from '../ui/account';
 
-import { FollowButton } from './follow-button';
+import { ActionButton } from './action-button';
 
 interface IAccount extends Pick<IUIAccount, 'action' | 'onPress' | 'style'> {
   id: string;
@@ -14,6 +14,7 @@ interface IAccount extends Pick<IUIAccount, 'action' | 'onPress' | 'style'> {
   fullWidthPressable?: boolean;
   displayFqn?: boolean;
   withFollowButton?: boolean;
+  actionType?: 'follow_request' | 'biting';
 }
 
 const Account: React.FC<IAccount> = ({
@@ -21,6 +22,7 @@ const Account: React.FC<IAccount> = ({
   withLink,
   displayFqn,
   withFollowButton,
+  actionType,
   action,
   ...props
 }) => {
@@ -51,7 +53,12 @@ const Account: React.FC<IAccount> = ({
           ? () => navigation.navigate('accounts', { screen: 'view', params: { id } })
           : undefined
       }
-      action={action || (withFollowButton ? <FollowButton id={id} simple /> : undefined)}
+      action={
+        action ||
+        (withFollowButton || actionType ? (
+          <ActionButton id={id} actionType={actionType} />
+        ) : undefined)
+      }
       {...props}
     />
   );

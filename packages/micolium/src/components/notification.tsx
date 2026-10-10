@@ -301,25 +301,9 @@ const Notification: React.FC<INotification> = (props) => {
       case 'follow_request_accepted':
         return <Account id={account.id} withLink withFollowButton />;
       case 'follow_request':
-        return (
-          <Account
-            id={account.id}
-            withLink
-            // avatarSize={avatarSize}
-            // actionType='follow_request'
-            // withRelationship
-          />
-        );
+        return <Account id={account.id} withLink actionType='follow_request' />;
       case 'bite':
-        return (
-          <Account
-            id={account.id}
-            withLink
-            // avatarSize={avatarSize}
-            // actionType='biting'
-            // withRelationship
-          />
-        );
+        return <Account id={account.id} withLink actionType='biting' />;
       case 'move':
         return notification.target ? (
           <Account id={notification.target_id} withLink withFollowButton />

@@ -29,7 +29,7 @@ type TimelineStackParams = {
   antenna: { id: string };
 };
 type NotificationsStackParams = {
-  view: undefined;
+  view: { tab: 'all' | 'mentions' };
 };
 type SearchStackParams = {
   search?: { type: 'statuses' | 'accounts' | 'hashtags' | 'links'; query: string };

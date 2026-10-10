@@ -63,26 +63,30 @@ const FollowButton: React.FC<IFollowButton> = ({ id, simple }) => {
 
   if (currentAccountId === id) return null;
 
-  if (relationship?.following) {
+  if (relationship?.following || relationship?.requested) {
     const handleUnfollow = () => {
-      Alert.alert(
-        intl.formatMessage(messages.unfollowHeading, { name: account?.username }),
-        intl.formatMessage(
-          account?.locked ? messages.unfollowMessageLocked : messages.unfollowMessage,
-          { name: account?.acct },
-        ),
-        [
-          {
-            text: intl.formatMessage(messages.cancel),
-            style: 'cancel',
-          },
-          {
-            text: intl.formatMessage(messages.unfollowConfirm),
-            style: 'destructive',
-            onPress: () => unfollowAccount(),
-          },
-        ],
-      );
+      if (relationship.requested) {
+        unfollowAccount();
+      } else {
+        Alert.alert(
+          intl.formatMessage(messages.unfollowHeading, { name: account?.username }),
+          intl.formatMessage(
+            account?.locked ? messages.unfollowMessageLocked : messages.unfollowMessage,
+            { name: account?.acct },
+          ),
+          [
+            {
+              text: intl.formatMessage(messages.cancel),
+              style: 'cancel',
+            },
+            {
+              text: intl.formatMessage(messages.unfollowConfirm),
+              style: 'destructive',
+              onPress: () => unfollowAccount(),
+            },
+          ],
+        );
+      }
       setShowMenu(false);
     };
 
@@ -94,7 +98,11 @@ const FollowButton: React.FC<IFollowButton> = ({ id, simple }) => {
           disabled={!relationship}
           loading={isPendingFollow}
         >
-          <FormattedMessage id='account.unfollow' defaultMessage='Unfollow' />
+          {relationship.requested ? (
+            <FormattedMessage id='account.requested_small' defaultMessage='Follow requested' />
+          ) : (
+            <FormattedMessage id='account.unfollow' defaultMessage='Unfollow' />
+          )}
         </Button>
       );
     }
@@ -216,6 +224,14 @@ const FollowButton: React.FC<IFollowButton> = ({ id, simple }) => {
           defaultMessage='Unblock @{name}'
           values={{ name: account?.username }}
         />
+      </Button>
+    );
+  }
+
+  if (relationship?.requested) {
+    return (
+      <Button mode='contained-tonal' onPress={() => unfollowAccount()} loading={isPendingFollow}>
+        <FormattedMessage id='account.requested_small' defaultMessage='Follow requested' />
       </Button>
     );
   }
