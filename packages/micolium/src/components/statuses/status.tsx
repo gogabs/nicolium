@@ -45,6 +45,7 @@ import { UIStatus } from '../ui/status';
 import { StatusActions } from './status-actions';
 import { StatusLinkPreview } from './status-link-preview';
 import { StatusMedia } from './status-media';
+import { Emojify } from '../ui/emojify';
 
 const messages = defineMessages({
   publicExplanation: {
@@ -200,7 +201,7 @@ const StatusRebloggedChip: React.FC<IStatusRebloggedChip> = ({ accountIds }) => 
                   params={{ screen: 'view', params: { id: account.id } }}
                   key={account.id}
                 >
-                  {account.display_name}
+                  <Emojify text={account.display_name} emojis={account.emojis} />
                 </Link>
               ))}
             />

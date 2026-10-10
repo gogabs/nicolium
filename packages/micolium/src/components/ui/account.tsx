@@ -10,6 +10,10 @@ import { type GestureResponderEvent, View, type StyleProp, type ViewStyle } from
 
 import RelativeTimestamp from '@/utils/relative-timestamp';
 
+import { Emojify } from './emojify';
+
+import type { CustomEmoji } from 'pl-api';
+
 const MaybeLink = ({
   children,
   onPress,
@@ -31,6 +35,7 @@ interface IUIAccount extends Pick<TouchableRippleProps, 'onPress' | 'style'> {
   avatarSrc?: string;
   displayName: string;
   displayNameDetail?: string;
+  emojis?: Array<CustomEmoji>;
   acct: string;
   timestamp?: string;
   fullWidthPressable?: boolean;
@@ -41,6 +46,7 @@ const UIAccount: React.FC<IUIAccount> = ({
   avatarSrc,
   displayName,
   displayNameDetail,
+  emojis,
   acct,
   timestamp,
   fullWidthPressable = true,
@@ -64,7 +70,7 @@ const UIAccount: React.FC<IUIAccount> = ({
         <MaybeLink onPress={onPress} fullWidthPressable={fullWidthPressable}>
           <View style={{ gap: 4, alignItems: 'center', flexDirection: 'row', maxWidth: '100%' }}>
             <Text variant='titleMedium' numberOfLines={1}>
-              {displayName}
+              {emojis ? <Emojify text={displayName} emojis={emojis} /> : displayName}
             </Text>
             {displayNameDetail && (
               <Text

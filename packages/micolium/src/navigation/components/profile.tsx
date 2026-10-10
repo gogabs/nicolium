@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/accounts/follow-button';
 import { ComposeButton } from '@/components/compose-button';
 import { CollapsibleContent } from '@/components/ui/collapsible-content';
+import { Emojify } from '@/components/ui/emojify';
 import { iconHelper } from '@/components/ui/icon';
 import { StyledHtml } from '@/components/ui/styled-html';
 import { useClient } from '@/contexts/current-account-context';
@@ -199,7 +200,7 @@ const Profile: React.FC<IProfile> = ({ id, ownAccount }) => {
             <View style={{ gap: 8, marginHorizontal: 16, marginBottom: 8 }}>
               <View>
                 <Text variant='titleMedium' numberOfLines={1}>
-                  {account.display_name}
+                  <Emojify text={account.display_name} emojis={account.emojis} />
                 </Text>
                 <Text variant='bodyMedium' numberOfLines={1} style={{ color: colors.outline }}>
                   @{account.acct}
@@ -265,7 +266,7 @@ const Profile: React.FC<IProfile> = ({ id, ownAccount }) => {
           {!ownAccount && <Appbar.BackAction onPress={navigation.goBack} />}
           <View style={{ marginLeft: ownAccount ? 16 : 0 }}>
             <Text variant='titleMedium' numberOfLines={1}>
-              {account.display_name}
+              <Emojify text={account.display_name} emojis={account.emojis} />
             </Text>
             <Text style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <FormattedMessage

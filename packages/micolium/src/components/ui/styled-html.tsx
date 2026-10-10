@@ -17,9 +17,9 @@ import { useAccount } from '@/queries/accounts/use-account';
 import { makeEmojiMap } from '@/utils/emojis';
 import { multiplyFontSizes } from '@/utils/themes';
 
-import type { CustomEmoji, Mention } from 'pl-api';
+import { validEmojiChar } from './emojify';
 
-const validEmojiChar = (c: string) => /^[a-zA-Z0-9_.-]$/.test(c);
+import type { CustomEmoji, Mention } from 'pl-api';
 
 const nodesToText = (nodes: Array<ChildNode>): string =>
   nodes

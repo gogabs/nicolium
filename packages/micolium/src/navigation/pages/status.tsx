@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Account } from '@/components/accounts/account';
 import { CurrentAccountAvatar } from '@/components/current-account-avatar';
 import { Status } from '@/components/statuses/status';
+import { Emojify } from '@/components/ui/emojify';
 import { EmptyMessage } from '@/components/ui/empty-message';
 import { LoadMore } from '@/components/ui/load-more';
 import { useFeatures } from '@/contexts/current-account-context';
@@ -58,12 +59,14 @@ const StatusHeader = ({ navigation, route, back }: NativeStackHeaderProps) => {
   const { colors } = useTheme();
   const { data: status } = useStatus(route.params?.id);
 
-  let title: string;
+  let title: string | Array<React.ReactNode>;
   let subtitle: string | undefined;
   switch (route.name) {
     case 'view':
       title = intl.formatMessage(status ? messages.statusByAuthorHeader : messages.statusHeader, {
-        name: status?.account.display_name,
+        name: status?.account ? (
+          <Emojify text={status.account.display_name} emojis={status.account.emojis} />
+        ) : undefined,
       });
       break;
     case 'reblogs':
@@ -168,7 +171,9 @@ const ReplyBox: React.FC<IReplyBox> = ({ status }) => {
             <FormattedMessage
               id='status.reply_to'
               defaultMessage='Reply to {name}'
-              values={{ name: status?.account.display_name }}
+              values={{
+                name: <Emojify text={status.account.display_name} emojis={status.account.emojis} />,
+              }}
             />
           </Text>
         </>

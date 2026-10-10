@@ -44,6 +44,7 @@ const Account: React.FC<IAccount> = ({
       avatarSrc={account.avatar_default ? undefined : account.avatar}
       displayName={account.display_name}
       displayNameDetail={pronouns}
+      emojis={account.emojis}
       acct={displayFqn ? account.fqn : account.acct}
       onPress={
         withLink
