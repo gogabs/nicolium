@@ -75,8 +75,6 @@ const Emojify: React.FC<IEmojify> = React.memo(({ text, emojis }) => {
   if (currentText.length) nodes.push(currentText);
   currentText = '';
 
-  console.log(nodes);
-
   return <>{nodes}</>;
 });
 

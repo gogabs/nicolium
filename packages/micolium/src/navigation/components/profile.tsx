@@ -3,6 +3,8 @@ import {
   Appbar,
   Avatar,
   Button,
+  Chip,
+  DataTable,
   Divider,
   IconButton,
   Text,
@@ -206,7 +208,35 @@ const Profile: React.FC<IProfile> = ({ id, ownAccount }) => {
                   @{account.acct}
                 </Text>
               </View>
-              <StyledHtml html={account.note} />
+              <StyledHtml html={account.note} emojis={account.emojis} />
+              {account.fields.length > 0 && (
+                <DataTable>
+                  {account.fields.map((field, index) => (
+                    <DataTable.Row key={index}>
+                      <DataTable.Cell>
+                        {field.verified_at ? (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Text>{field.name}</Text>
+                            {field.verified_at && (
+                              <Chip compact>
+                                <FormattedMessage
+                                  id='status.verified_field'
+                                  defaultMessage='Verified'
+                                />
+                              </Chip>
+                            )}
+                          </View>
+                        ) : (
+                          field.name
+                        )}
+                      </DataTable.Cell>
+                      <DataTable.Cell>
+                        <StyledHtml html={field.value} emojis={account.emojis} />
+                      </DataTable.Cell>
+                    </DataTable.Row>
+                  ))}
+                </DataTable>
+              )}
             </View>
             <Divider />
             <View style={{ flexDirection: 'row', marginHorizontal: 16, marginVertical: 8, gap: 8 }}>
