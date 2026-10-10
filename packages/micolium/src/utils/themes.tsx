@@ -5,6 +5,7 @@ import {
   DefaultTheme as NavigationDefaultTheme,
 } from '@react-navigation/native';
 import merge from 'deepmerge';
+import React from 'react';
 
 import type { TypescaleStyle } from '@mkljczk/react-native-paper/lib/typescript/src/theme/types';
 

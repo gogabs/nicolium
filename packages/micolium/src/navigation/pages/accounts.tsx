@@ -2,6 +2,7 @@ import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import React from 'react';
 
 import { Profile } from '../components/profile';
 

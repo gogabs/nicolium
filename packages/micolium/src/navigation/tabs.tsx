@@ -1,4 +1,4 @@
-import { Avatar, BottomNavigation } from '@mkljczk/react-native-paper';
+import { BottomNavigation } from '@mkljczk/react-native-paper';
 import { type BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import { createNativeBottomTabNavigator } from '@react-navigation/bottom-tabs/unstable';
 import { CommonActions } from '@react-navigation/native';
