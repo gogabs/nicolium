@@ -155,6 +155,72 @@ const ListTimelineScreen: React.FC<NativeStackScreenProps<TimelineStackParams, '
   );
 };
 
+const AntennaTimelineScreen: React.FC<NativeStackScreenProps<TimelineStackParams, 'antenna'>> = ({
+  route,
+}) => {
+  const client = useClient();
+  const { showComposeButton, handleScroll } = useShowComposeButton();
+
+  const timelineQuery = useTimeline(`antenna:${route.params.id}`, (paginationParams) =>
+    client.timelines.antennaTimeline(route.params.id, paginationParams),
+  );
+
+  return (
+    <>
+      <Timeline
+        query={timelineQuery}
+        emptyMessageHeading={
+          <FormattedMessage
+            id='empty_column.antenna.heading'
+            defaultMessage='There is nothing in this antenna yet.'
+          />
+        }
+        emptyMessageText={
+          <FormattedMessage
+            id='empty_column.antenna.text'
+            defaultMessage='When members of this antenna create new posts, they will appear here.'
+          />
+        }
+        onScroll={handleScroll}
+      />
+      <ComposeButton visible={showComposeButton} />
+    </>
+  );
+};
+
+const CircleTimelineScreen: React.FC<NativeStackScreenProps<TimelineStackParams, 'circle'>> = ({
+  route,
+}) => {
+  const client = useClient();
+  const { showComposeButton, handleScroll } = useShowComposeButton();
+
+  const timelineQuery = useTimeline(`circle:${route.params.id}`, (paginationParams) =>
+    client.circles.getCircleStatuses(route.params.id, paginationParams),
+  );
+
+  return (
+    <>
+      <Timeline
+        query={timelineQuery}
+        emptyMessageHeading={
+          <FormattedMessage
+            id='empty_column.circle.heading'
+            defaultMessage='There is nothing in this circle yet.'
+          />
+        }
+        emptyMessageText={
+          <FormattedMessage
+            id='empty_column.circle.text'
+            defaultMessage='When members of this circle create new posts, they will appear here.'
+          />
+        }
+        onScroll={handleScroll}
+      />
+      <ComposeButton visible={showComposeButton} />
+    </>
+  );
+};
+
 const HomeStack = createNativeStackNavigator<TimelineStackParams>();
 
 const HomeStackScreen = () => {
@@ -174,6 +240,8 @@ const HomeStackScreen = () => {
       <HomeStack.Screen name='bubble' component={BubbleTimelineScreen} />
       <HomeStack.Screen name='federated' component={FederatedTimelineScreen} />
       <HomeStack.Screen name='list' component={ListTimelineScreen} />
+      <HomeStack.Screen name='antenna' component={AntennaTimelineScreen} />
+      <HomeStack.Screen name='circle' component={CircleTimelineScreen} />
     </HomeStack.Navigator>
   );
 };
