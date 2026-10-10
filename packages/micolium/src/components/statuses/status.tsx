@@ -5,26 +5,35 @@ import {
   Icon,
   IconButton,
   Text,
+  Tooltip,
   TouchableRipple,
   useTheme,
 } from '@mkljczk/react-native-paper';
 import { Link, useNavigation } from '@react-navigation/native';
 import {
+  AtIcon,
+  CoinsIcon,
   DotsThreeIcon,
   DotsThreeVerticalIcon,
+  GlobeIcon,
   HashIcon,
+  ListIcon,
+  LockIcon,
+  MoonIcon,
   PaperclipIcon,
+  PlanetIcon,
   PushPinIcon,
   QuotesIcon,
   RepeatIcon,
+  UsersThreeIcon,
+  type Icon as PhosphorIcon,
 } from 'phosphor-react-native';
 import React from 'react';
-import { FormattedList, FormattedMessage } from 'react-intl';
+import { defineMessages, FormattedList, FormattedMessage, useIntl } from 'react-intl';
 import { Platform, View, type StyleProp, type ViewStyle } from 'react-native';
-import { boolean } from 'valibot';
 
-import { useAccount } from '@/queries/accounts/use-account';
 import { useAccounts } from '@/queries/accounts/use-accounts';
+import { useList } from '@/queries/accounts/use-lists';
 import { useFollowedTags } from '@/queries/hashtags/use-followed-tags';
 import { type SelectedStatus, useStatus } from '@/queries/statuses/use-status';
 import { useStatusMeta, useStatusMetaActions } from '@/stores/status-meta';
@@ -36,6 +45,108 @@ import { UIStatus } from '../ui/status';
 import { StatusActions } from './status-actions';
 import { StatusLinkPreview } from './status-link-preview';
 import { StatusMedia } from './status-media';
+
+const messages = defineMessages({
+  publicExplanation: {
+    id: 'status.visibility.public',
+    defaultMessage: 'The post is visible to everyone and appears in public timelines',
+  },
+  unlistedExplanation: {
+    id: 'status.visibility.unlisted',
+    defaultMessage: 'The post is visible to everyone, but doesn’t appear in public timelines',
+  },
+  privateExplanation: {
+    id: 'status.visibility.private',
+    defaultMessage: 'The post is only visible to followers of the author',
+  },
+  mutualsOnlyExplanation: {
+    id: 'status.visibility.mutuals_only',
+    defaultMessage: 'The post is only visible to people who mutually follow the author',
+  },
+  directExplanation: {
+    id: 'status.visibility.direct',
+    defaultMessage: 'The post is only visible to mentioned users',
+  },
+  localExplanation: {
+    id: 'status.visibility.local',
+    defaultMessage: 'The post is only visible to users on your instance',
+  },
+  listExplanation: {
+    id: 'status.visibility.list',
+    defaultMessage: 'The post is only visible to the members of a list',
+  },
+  listNamedExplanation: {
+    id: 'status.visibility.list.named',
+    defaultMessage: 'The post is only visible to the members of a {name} list',
+  },
+  subscribersExplanation: {
+    id: 'status.visibility.subscribers',
+    defaultMessage: 'The post is only visible to users subscribing to the author',
+  },
+});
+
+interface IStatusVisibilityIcon {
+  status: SelectedStatus;
+}
+
+const StatusVisibilityIcon: React.FC<IStatusVisibilityIcon> = ({ status }) => {
+  const intl = useIntl();
+  const { data: list } = useList(status.list_id?.toString());
+
+  let icon: PhosphorIcon | undefined;
+  let title: string | undefined;
+
+  switch (status.visibility) {
+    case 'public':
+      icon = GlobeIcon;
+      title = intl.formatMessage(messages.publicExplanation);
+      break;
+    case 'unlisted':
+      icon = MoonIcon;
+      title = intl.formatMessage(messages.unlistedExplanation);
+      break;
+    case 'private':
+      icon = LockIcon;
+      title = intl.formatMessage(messages.privateExplanation);
+      break;
+    case 'mutuals_only':
+      icon = UsersThreeIcon;
+      title = intl.formatMessage(messages.mutualsOnlyExplanation);
+      break;
+    case 'direct':
+      icon = AtIcon;
+      title = intl.formatMessage(messages.directExplanation);
+      break;
+    case 'local':
+      icon = PlanetIcon;
+      title = intl.formatMessage(messages.localExplanation);
+      break;
+    case 'list':
+      icon = ListIcon;
+      if (list) {
+        title = intl.formatMessage(messages.listNamedExplanation, {
+          name: list.title,
+        });
+      } else {
+        title = intl.formatMessage(messages.listExplanation);
+      }
+      break;
+    case 'subscribers':
+      icon = CoinsIcon;
+      title = intl.formatMessage(messages.subscribersExplanation);
+      break;
+  }
+
+  if (!icon) return null;
+
+  if (!title) return <Icon source={iconHelper(icon)} size={20} />;
+
+  return (
+    <Tooltip title={title}>
+      {(props) => <Icon source={iconHelper(icon)} size={20} {...props} />}
+    </Tooltip>
+  );
+};
 
 interface IQuote {
   id: string;
@@ -274,13 +385,16 @@ const Status: React.FC<IStatus> = ({
             withLink
             fullWidthPressable={false}
           />
-          {withActions && (
-            <IconButton
-              icon={iconHelper(Platform.OS === 'ios' ? DotsThreeIcon : DotsThreeVerticalIcon)}
-              onPress={() => {}}
-              style={{ height: 32, width: 32 }}
-            />
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <StatusVisibilityIcon status={status} />
+            {withActions && (
+              <IconButton
+                icon={iconHelper(Platform.OS === 'ios' ? DotsThreeIcon : DotsThreeVerticalIcon)}
+                onPress={() => {}}
+                style={{ height: 32, width: 32 }}
+              />
+            )}
+          </View>
         </View>
       }
       displayedMentions={<StatusReplyMentions status={actualStatus} />}
