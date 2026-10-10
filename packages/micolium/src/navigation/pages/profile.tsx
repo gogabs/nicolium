@@ -3,6 +3,7 @@ import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import React from 'react';
 import { View } from 'react-native';
 
 import { useCredentialAccountId } from '@/queries/accounts/use-account-credentials';

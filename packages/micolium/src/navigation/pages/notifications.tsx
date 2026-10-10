@@ -3,6 +3,7 @@ import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
+import React from 'react';
 import { Tabs, TabScreen, TabsProvider } from 'react-native-paper-tabs';
 
 import { Header } from '@/components/ui/header';

@@ -1,4 +1,4 @@
-import { Button, Card, Text, TouchableRipple, useTheme } from '@mkljczk/react-native-paper';
+import { Button, Card, Text, useTheme } from '@mkljczk/react-native-paper';
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { View } from 'react-native';

@@ -13,7 +13,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { View } from 'react-native';
 
 import { useFeatures } from '@/contexts/current-account-context';
-import { useCanInteract, useInteractionMessages } from '@/hooks/use-can-interact';
+import { useInteractionMessages } from '@/hooks/use-can-interact';
 import { useScopeUrl } from '@/hooks/use-scope-url';
 import {
   useDislikeStatus,

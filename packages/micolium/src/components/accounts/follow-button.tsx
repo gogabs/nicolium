@@ -9,7 +9,7 @@ import {
 import { BellSimpleIcon } from 'phosphor-react-native';
 import React, { useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
-import { Alert, ViewStyle } from 'react-native';
+import { Alert, type ViewStyle } from 'react-native';
 
 import { useFeatures } from '@/contexts/current-account-context';
 import { useAccount } from '@/queries/accounts/use-account';
