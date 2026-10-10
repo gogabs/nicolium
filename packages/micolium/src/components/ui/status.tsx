@@ -4,6 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { View } from 'react-native';
 
 import { CollapsibleContent } from './collapsible-content';
+import { Emojify } from './emojify';
 import { StyledHtml } from './styled-html';
 
 import type { CustomEmoji, Mention } from 'pl-api';
@@ -67,7 +68,7 @@ const UIStatus: React.FC<IUIStatus> = ({
                 variant='titleSmall'
                 numberOfLines={!(detailed || spoilerExpanded) ? 1 : undefined}
               >
-                {spoilerText}
+                {emojis ? <Emojify text={spoilerText} emojis={emojis} /> : spoilerText}
               </Text>
             </Card.Content>
             {expandStatusSpoiler && (

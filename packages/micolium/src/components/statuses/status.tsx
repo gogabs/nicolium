@@ -39,13 +39,13 @@ import { type SelectedStatus, useStatus } from '@/queries/statuses/use-status';
 import { useStatusMeta, useStatusMetaActions } from '@/stores/status-meta';
 
 import { Account } from '../accounts/account';
+import { Emojify } from '../ui/emojify';
 import { iconHelper } from '../ui/icon';
 import { UIStatus } from '../ui/status';
 
 import { StatusActions } from './status-actions';
 import { StatusLinkPreview } from './status-link-preview';
 import { StatusMedia } from './status-media';
-import { Emojify } from '../ui/emojify';
 
 const messages = defineMessages({
   publicExplanation: {
