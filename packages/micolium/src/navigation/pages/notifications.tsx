@@ -5,7 +5,7 @@ import {
 } from '@react-navigation/native-stack';
 import { FlashList } from '@shopify/flash-list';
 import React from 'react';
-import { FormattedMessage } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { View } from 'react-native';
 import { Tabs, TabScreen, TabsProvider } from 'react-native-paper-tabs';
 
@@ -18,6 +18,11 @@ import { useSetting } from '@/stores/settings';
 
 import type { NotificationsStackParams } from '../router';
 
+const messages = defineMessages({
+  tabAll: { id: 'notifications.filter.all', defaultMessage: 'All' },
+  tabMentions: { id: 'notifications.filter_mentions', defaultMessage: 'Mentions' },
+});
+
 const LoadingIndicator = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
     <ActivityIndicator size='large' />
@@ -25,6 +30,7 @@ const LoadingIndicator = () => (
 );
 
 const NotificationsScreen = (_props: NativeStackScreenProps<NotificationsStackParams, 'view'>) => {
+  const intl = useIntl();
   const { colors } = useTheme();
 
   const filters = useSetting('notifications.filters');
@@ -85,8 +91,12 @@ const NotificationsScreen = (_props: NativeStackScreenProps<NotificationsStackPa
   return (
     <TabsProvider defaultIndex={0} onChangeIndex={handleChangeIndex}>
       <Tabs style={{ backgroundColor: colors.surfaceContainer }} uppercase={false}>
-        <TabScreen label='All'>{renderNotifications('all')}</TabScreen>
-        <TabScreen label='Mentions'>{renderNotifications('mentions')}</TabScreen>
+        <TabScreen label={intl.formatMessage(messages.tabAll)}>
+          {renderNotifications('all')}
+        </TabScreen>
+        <TabScreen label={intl.formatMessage(messages.tabMentions)}>
+          {renderNotifications('mentions')}
+        </TabScreen>
       </Tabs>
     </TabsProvider>
   );
