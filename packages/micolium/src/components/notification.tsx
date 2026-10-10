@@ -293,7 +293,7 @@ const Notification: React.FC<INotification> = (props) => {
 
   const renderContent = () => {
     if (notification.type === 'bite' && status) {
-      return <Status id={status.id} withActions={false} withLink compact style={{ padding: 0 }} />;
+      return <Status id={status.id} withLink compact style={{ padding: 0 }} />;
     }
 
     switch (notification.type) {
@@ -343,9 +343,7 @@ const Notification: React.FC<INotification> = (props) => {
       case 'quote':
       case 'quoted_update':
       case 'subscribed_reaction':
-        return status ? (
-          <Status id={status.id} withActions={false} withLink compact style={{ padding: 0 }} />
-        ) : null;
+        return status ? <Status id={status.id} withLink compact style={{ padding: 0 }} /> : null;
       default:
         return null;
     }

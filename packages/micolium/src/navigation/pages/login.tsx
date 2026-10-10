@@ -129,6 +129,16 @@ const LoginLayout: React.FC<ILoginLayout> = ({ children, footer }) => {
   );
 };
 
+const normalizeInstanceUrl = (input: string) => {
+  let normalizedInput = input.trim();
+
+  if (normalizedInput.startsWith('http://') || normalizedInput.startsWith('https://')) {
+    return normalizedInput;
+  }
+
+  return `https://${normalizeInstanceUrl}`;
+};
+
 const LoginScreen = ({ navigation }: NativeStackScreenProps<LoginStackParams, 'instance'>) => {
   const { colors } = useTheme();
   const intl = useIntl();
@@ -139,14 +149,15 @@ const LoginScreen = ({ navigation }: NativeStackScreenProps<LoginStackParams, 'i
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(false);
 
-  const canSubmit = instance.trim().length > 0;
+  const instanceUrl = normalizeInstanceUrl(instance);
+  const canSubmit = !!instanceUrl;
 
   const submit = async () => {
-    if (!canSubmit) return;
+    if (!instanceUrl) return;
 
     setLoading(true);
     try {
-      await fetchInstance(`https://${instance.trim()}`);
+      await fetchInstance(instanceUrl);
       setLoading(false);
       if (!useAuthStore.getState().pendingAuthClient?.features.grantTypePassword) {
         await createApp('authorization_code');

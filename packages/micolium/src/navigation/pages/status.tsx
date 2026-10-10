@@ -344,27 +344,27 @@ const StatusStackScreen = (_props: NativeStackScreenProps<RootStackParams, 'stat
       <StatusStack.Screen
         name='view'
         component={StatusViewScreen}
-        options={{ header: StatusHeader, title: 'Status' }}
+        options={{ header: StatusHeader }}
       />
       <StatusStack.Screen
         name='reblogs'
         component={StatusReblogsScreen}
-        options={{ header: StatusHeader, title: 'Reposts' }}
+        options={{ header: StatusHeader }}
       />
       <StatusStack.Screen
         name='favourites'
         component={StatusFavouritesScreen}
-        options={{ header: StatusHeader, title: 'Likes' }}
+        options={{ header: StatusHeader }}
       />
       <StatusStack.Screen
         name='dislikes'
         component={StatusDislikesScreen}
-        options={{ header: StatusHeader, title: 'Dislikes' }}
+        options={{ header: StatusHeader }}
       />
       <StatusStack.Screen
         name='mentions'
         component={StatusMentionsScreen}
-        options={{ header: StatusHeader, title: 'Mentions' }}
+        options={{ header: StatusHeader }}
       />
     </StatusStack.Navigator>
   );

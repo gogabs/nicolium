@@ -30,7 +30,9 @@ const Emojify: React.FC<IEmojify> = React.memo(({ text, emojis }) => {
     stack = '';
   };
 
-  for (const c of Array.from(text)) {
+  for (const i in Array.from(text)) {
+    const c = text[i];
+
     if (c === ':') {
       if (!open) {
         clearStack();
@@ -47,6 +49,7 @@ const Emojify: React.FC<IEmojify> = React.memo(({ text, emojis }) => {
           currentText = '';
           nodes.push(
             <Image
+              key={i}
               source={{ uri: emoji.url }}
               accessibilityLabel={emoji.shortcode}
               style={{ width: 16, height: 16, objectFit: 'contain', display: 'inline-block' }}

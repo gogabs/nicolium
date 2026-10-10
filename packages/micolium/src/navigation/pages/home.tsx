@@ -17,14 +17,18 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 const useShowComposeButton = () => {
   const previousScrollOffset = React.useRef<number>(0);
+  const scrollDownStartOffset = React.useRef<number>(0);
 
   const [showComposeButton, setShowComposeButton] = React.useState(true);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollOffset = event.nativeEvent.contentOffset.y || event.target?.scrollTop || 0;
-    setShowComposeButton(
-      (value) => (value ? scrollOffset - 16 : scrollOffset) < previousScrollOffset.current,
-    );
+    if (scrollOffset < previousScrollOffset.current) {
+      scrollDownStartOffset.current = scrollOffset;
+      setShowComposeButton(true);
+    } else if (scrollOffset - scrollDownStartOffset.current > 16) {
+      setShowComposeButton(false);
+    }
     previousScrollOffset.current = scrollOffset;
   };
 
