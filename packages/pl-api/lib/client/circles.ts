@@ -93,7 +93,7 @@ const circles = (client: PlApiBaseClient) => ({
     return response.json;
   },
 
-  getCircleStatuses: (circleId: string, params: GetCircleStatusesParams) =>
+  getCircleStatuses: (circleId: string, params?: GetCircleStatusesParams) =>
     client.paginatedGet(`/api/v1/circles/${circleId}/statuses`, { params }, statusSchema),
 });
 
