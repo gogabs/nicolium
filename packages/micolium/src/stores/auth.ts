@@ -228,7 +228,7 @@ const useAuthStore = create<AuthStore>()(
         signOut: () => {
           const { currentAccount, clients, sessions } = get();
 
-          if (!currentAccount) return null;
+          if (!currentAccount) return;
 
           const currentSession = sessions[currentAccount];
 

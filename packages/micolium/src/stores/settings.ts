@@ -1,4 +1,5 @@
 import { createAsyncStorage } from '@react-native-async-storage/async-storage';
+import { filterSchema } from 'pl-api';
 import * as v from 'valibot';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -15,6 +16,7 @@ const settingsSchema = v.object({
     v.picklist(['text/plain', 'text/markdown', 'text/html']),
     'text/plain',
   ),
+  'compose.defaultLanguage': v.fallback(v.string(), 'detect'),
   'compose.forceImplicitAddressing': v.fallback(v.boolean(), false),
   'compose.missingDescriptionModal': v.fallback(v.boolean(), true),
   'compose.missingLanguageModal': v.fallback(v.boolean(), false),
@@ -29,6 +31,8 @@ const settingsSchema = v.object({
   ),
   'notifications.hideBots': v.optional(v.boolean(), false),
   'notifications.autoMarkRead': v.optional(v.boolean(), false),
+
+  filters: filteredArray(filterSchema),
 });
 
 type Settings = v.InferOutput<typeof settingsSchema>;

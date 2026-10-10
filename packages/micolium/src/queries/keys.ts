@@ -320,8 +320,8 @@ const admin = {
 
 const notifications = {
   root: ['notifications'] as const,
-  list: (activeFilter?: FilterType, hideBots?: boolean) => {
-    const key = ['notifications', activeFilter, hideBots] as const;
+  list: (activeFilters?: Array<FilterType>, hideBots?: boolean) => {
+    const key = ['notifications', activeFilters, hideBots] as const;
     return key as TaggedKey<
       typeof key,
       InfiniteData<PaginatedResponse<Array<NotificationGroup>, false>>

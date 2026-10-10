@@ -61,7 +61,7 @@ export const App = () => {
       setLoaded(true);
       SplashScreen.hideAsync();
     });
-  });
+  }, []);
 
   if (!loaded) return null;
 

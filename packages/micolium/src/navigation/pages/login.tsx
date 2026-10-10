@@ -68,6 +68,10 @@ const messages = defineMessages({
     id: 'landing_mobile.credentials.headline',
     defaultMessage: 'Sign in to {instance}',
   },
+  failMessage: {
+    id: 'landing_mobile.fail',
+    defaultMessage: 'Failed to authenticate.',
+  },
   interruptMessage: {
     id: 'landing_mobile.interrupt',
     defaultMessage: 'Authentication interrupted.',
@@ -275,7 +279,10 @@ const CredentialsScreen = ({
               style={{ flex: 1 }}
               disabled={loading}
             >
-              <FormattedMessage id='landing_mobile.sign_in' defaultMessage='Use browser auth' />
+              <FormattedMessage
+                id='landing_mobile.browser_auth'
+                defaultMessage='Use browser auth'
+              />
             </Button>
           )}
         </View>
@@ -339,9 +346,18 @@ const OauthFlowScreen = ({
     if (response?.type === 'success') {
       const { code } = response.params;
 
-      signInWithCode(code, request?.codeVerifier!).then(() => {
-        navigation.getParent()?.navigate('app');
-      });
+      signInWithCode(code, request?.codeVerifier!)
+        .then(() => {
+          navigation.getParent()?.navigate('app');
+        })
+        .catch(() => {
+          if (Platform.OS === 'android') {
+            ToastAndroid.show(intl.formatMessage(messages.failMessage), ToastAndroid.SHORT);
+          } else {
+            toast(intl.formatMessage(messages.failMessage));
+          }
+          navigation.goBack();
+        });
     } else if (response && ['locked', 'cancel', 'dismiss', 'error'].includes(response.type)) {
       if (Platform.OS === 'android') {
         ToastAndroid.show(intl.formatMessage(messages.interruptMessage), ToastAndroid.SHORT);

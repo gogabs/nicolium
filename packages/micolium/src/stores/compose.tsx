@@ -1071,7 +1071,7 @@ const submitCompose = async (
 
   const compose = actions.getCompose(composeId);
 
-  const { defaultContentType } = { defaultContentType: 'text/plain' }; // useSettingsStore.getState().settings;
+  const defaultContentType = useSettingsStore.getState().settings['compose.defaultContentType'];
 
   const contentType = getComposeContentType(
     opts.common?.contentType ?? compose.contentType,
@@ -1216,7 +1216,8 @@ const submitCompose = async (
 
   const idempotencyKey = compose.idempotencyKey;
 
-  const { defaultLanguage, defaultPrivacy } = { defaultLanguage: 'en', defaultPrivacy: 'public' };
+  const defaultLanguage = useSettingsStore.getState().settings['compose.defaultLanguage'];
+  const defaultPrivacy = useSettingsStore.getState().settings['compose.defaultPrivacy'];
 
   let visibility = opts.common?.visibility ?? compose.visibility;
   if (visibility === 'default') visibility = defaultPrivacy;

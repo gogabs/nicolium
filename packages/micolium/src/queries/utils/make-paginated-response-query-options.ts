@@ -21,6 +21,7 @@ const makePaginatedResponseQueryOptions =
       scopeUrl: string,
     ) => Promise<PaginatedResponse<T2, IsArray>>,
     select?: (data: InfiniteData<PaginatedResponse<T2, IsArray>>) => T3,
+    enabled?: (...params: T1) => boolean,
   ) =>
   (client: PlApiClient, ...params: [...T1, scopeUrl: string]) =>
     infiniteQueryOptions({
@@ -30,6 +31,7 @@ const makePaginatedResponseQueryOptions =
       initialPageParam: { next: null as (() => Promise<PaginatedResponse<T2, IsArray>>) | null },
       getNextPageParam: (page) => (page.next ? page : undefined),
       select: select ?? defaultSelect<T2, IsArray, T3>,
+      enabled: enabled?.(...(params.slice(0, -1) as T1)) ?? true,
     });
 
 export { makePaginatedResponseQueryOptions };

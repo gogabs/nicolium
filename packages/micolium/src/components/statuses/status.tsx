@@ -331,7 +331,7 @@ interface IStatus {
   id: string;
   rebloggedBy?: Array<string>;
   showPinned?: boolean;
-  context?: 'home' | 'timeline' | 'thread';
+  context?: 'home' | 'timeline' | 'thread' | 'notifications';
   isConnectedBottom?: boolean | ((status: SelectedStatus) => boolean);
   withLink?: boolean;
   withActions?: boolean;
@@ -368,8 +368,12 @@ const Status: React.FC<IStatus> = ({
     chip = <StatusPinnedChip />;
   } else if (rebloggedBy?.length) {
     chip = <StatusRebloggedChip accountIds={rebloggedBy} />;
-  } else if ((context === 'timeline' || context === 'home') && status.reblog && status.account_id) {
-    chip = <StatusRebloggedChip accountIds={[status.account_id]} />;
+  } else if (
+    (context === 'timeline' || context === 'home') &&
+    actualStatus.reblog &&
+    actualStatus.account_id
+  ) {
+    chip = <StatusRebloggedChip accountIds={[actualStatus.account_id]} />;
   } else if (context === 'home') {
     chip = <StatusMaybeFollowedHashtagChip status={actualStatus} />;
   }
@@ -406,7 +410,7 @@ const Status: React.FC<IStatus> = ({
       media={
         props.textOnly ? (
           <>
-            {status.media_attachments.length > 0 && (
+            {actualStatus.media_attachments.length > 0 && (
               <View
                 style={{
                   flexDirection: 'row',
@@ -419,12 +423,12 @@ const Status: React.FC<IStatus> = ({
                   <FormattedMessage
                     id='status.attachment_count'
                     defaultMessage='{count, plural, one {# attachment} other {# attachments}}'
-                    values={{ count: status.media_attachments.length }}
+                    values={{ count: actualStatus.media_attachments.length }}
                   />
                 </Text>
               </View>
             )}
-            {status.quote_id && (
+            {actualStatus.quote_id && (
               <View
                 style={{
                   flexDirection: 'row',
@@ -441,7 +445,7 @@ const Status: React.FC<IStatus> = ({
           </>
         ) : (
           <>
-            <StatusMedia status={status} compact={props.compact} />
+            <StatusMedia status={actualStatus} compact={props.compact} />
             {actualStatus.quote_id &&
               (props.compact ? (
                 <Card mode='outlined'>
@@ -455,11 +459,11 @@ const Status: React.FC<IStatus> = ({
               ) : (
                 <Quote id={actualStatus.quote_id} />
               ))}
-            {!props.compact && <StatusLinkPreview status={status} />}
+            {!props.compact && <StatusLinkPreview status={actualStatus} />}
           </>
         )
       }
-      actions={withActions ? <StatusActions status={status} /> : undefined}
+      actions={withActions ? <StatusActions status={actualStatus} /> : undefined}
       isConnectedBottom={
         typeof isConnectedBottom === 'function'
           ? isConnectedBottom(actualStatus)
@@ -478,7 +482,7 @@ const Status: React.FC<IStatus> = ({
         onPress={() => {
           navigation.navigate('status', { screen: 'view', params: { id } });
         }}
-        style={{ ...style, padding: 16 }}
+        style={{ padding: 16, ...style }}
       >
         {statusBody}
       </TouchableRipple>

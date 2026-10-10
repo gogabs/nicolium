@@ -106,7 +106,7 @@ const ReplyIndicator: React.FC<ICompose> = ({ composeId = COMPOSE_ID }) => {
           icon={iconHelper(XIcon)}
           style={{ margin: 0 }}
           onPress={() =>
-            updateCompose(COMPOSE_ID, (draft) => {
+            updateCompose(composeId, (draft) => {
               draft.inReplyToId = null;
             })
           }
