@@ -223,13 +223,9 @@ const TimelineHeader = ({ route }: NativeStackHeaderProps) => {
             </Text>
           }
         />
-        {!route.params?.tab ||
-          (route.params?.tab === 'all' && (
-            <Appbar.Action
-              icon={iconHelper(FunnelIcon)}
-              onPress={() => setShowFiltersDialog(true)}
-            />
-          ))}
+        {(!route.params || route.params?.tab === 'all') && (
+          <Appbar.Action icon={iconHelper(FunnelIcon)} onPress={() => setShowFiltersDialog(true)} />
+        )}
         <NotificationsMarkReadButton />
       </Appbar.Header>
       <FiltersDialog visible={showFiltersDialog} setVisible={setShowFiltersDialog} />
