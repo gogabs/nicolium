@@ -32,6 +32,7 @@ import {
   useStatusFavourites,
   useStatusReblogs,
 } from '@/queries/statuses/use-status-interactions';
+import { useStatusQuotes } from '@/queries/statuses/use-status-quotes';
 import { useComposeActions } from '@/stores/compose';
 import { useThread } from '@/stores/contexts';
 import { useSetting } from '@/stores/settings';
@@ -48,6 +49,7 @@ const messages = defineMessages({
   favouritesHeader: { id: 'column.favourites', defaultMessage: 'Likes' },
   dislikesHeader: { id: 'column.dislikes', defaultMessage: 'Dislikes' },
   mentionsHeader: { id: 'column.mentions', defaultMessage: 'Mentions' },
+  quotesHeader: { id: 'column.quotes', defaultMessage: 'Post quotes' },
   countSubtitle: {
     id: 'column.count',
     defaultMessage: '{count, plural, one {# person} other {# people}}',
@@ -336,6 +338,43 @@ const StatusMentionsScreen = ({
   );
 };
 
+const StatusQuotesScreen = ({
+  route: {
+    params: { id },
+  },
+}: NativeStackScreenProps<StatusStackParams, 'quotes'>) => {
+  const autoloadMore = useSetting('timelines.autoloadMore');
+
+  const quotesQuery = useStatusQuotes(id);
+
+  return (
+    <FlashList
+      data={quotesQuery.data}
+      renderItem={({ item }) => <Status id={item} withLink />}
+      ItemSeparatorComponent={Divider}
+      onEndReached={
+        autoloadMore && quotesQuery.hasNextPage && !quotesQuery.isFetching
+          ? quotesQuery.fetchNextPage
+          : undefined
+      }
+      onEndReachedThreshold={0.1}
+      ListEmptyComponent={
+        !quotesQuery.isPending ? (
+          <EmptyMessage
+            emptyMessageText={
+              <FormattedMessage
+                id='empty_column.quotes'
+                defaultMessage='This post has not been quoted yet.'
+              />
+            }
+          />
+        ) : null
+      }
+      ListFooterComponent={<LoadMore query={quotesQuery} />}
+    />
+  );
+};
+
 const StatusStack = createNativeStackNavigator<StatusStackParams>();
 
 const StatusStackScreen = (_props: NativeStackScreenProps<RootStackParams, 'status'>) => {
@@ -364,6 +403,11 @@ const StatusStackScreen = (_props: NativeStackScreenProps<RootStackParams, 'stat
       <StatusStack.Screen
         name='mentions'
         component={StatusMentionsScreen}
+        options={{ header: StatusHeader }}
+      />
+      <StatusStack.Screen
+        name='quotes'
+        component={StatusQuotesScreen}
         options={{ header: StatusHeader }}
       />
     </StatusStack.Navigator>
