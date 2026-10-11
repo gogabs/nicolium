@@ -67,9 +67,7 @@ const StatusHeader = ({ navigation, route, back }: NativeStackHeaderProps) => {
     case 'view':
       title = intl.formatMessage(status ? messages.statusByAuthorHeader : messages.statusHeader, {
         name: status?.account ? (
-          <Text>
-            <Emojify text={status.account.display_name} emojis={status.account.emojis} />
-          </Text>
+          <Emojify text={status.account.display_name} emojis={status.account.emojis} />
         ) : undefined,
       });
       break;
@@ -108,7 +106,17 @@ const StatusHeader = ({ navigation, route, back }: NativeStackHeaderProps) => {
           <Text style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{subtitle}</Text>
         </View>
       ) : (
-        <Appbar.Content title={title} />
+        <Appbar.Content
+          title={
+            typeof title === 'string' ? (
+              title
+            ) : (
+              <Text variant='titleLarge' numberOfLines={1}>
+                {title}
+              </Text>
+            )
+          }
+        />
       )}
     </Appbar.Header>
   );
