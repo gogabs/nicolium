@@ -480,13 +480,14 @@ interface ComposeActions {
     rebloggedBy?: Pick<Account, 'acct' | 'id'>,
     approvalRequired?: boolean,
   ) => void;
-  //   quoteCompose: (
-  //     status: Pick<Status, 'id' | 'account_id' | 'visibility' | 'group_id' | 'list_id'>,
-  //     scopeUrl: string,
-  //     columnId?: string,
-  //     approvalRequired?: boolean,
-  //     openComposer?: boolean,
-  //   ) => void;
+  quoteCompose: (
+    status: Pick<
+      SelectedStatus,
+      'id' | 'account_id' | 'visibility' | 'group_id' | 'list_id' | 'spoiler_text'
+    >,
+    scopeUrl: string,
+    approvalRequired?: boolean,
+  ) => void;
   //   mentionCompose: (account: Pick<Account, 'acct'>, scopeUrl: string, columnId?: string) => void;
   //   directCompose: (account: Pick<Account, 'acct'>, scopeUrl: string, columnId?: string) => void;
   //   groupComposeModal: (group: Pick<Group, 'id'>, scopeUrl: string, columnId?: string) => void;
@@ -770,54 +771,49 @@ const useComposeStore = create<ComposeStore>()(
             compose.contentType = draft.default.contentType;
             compose.approvalRequired = approvalRequired ?? false;
             if (preserveSpoilers && status.spoiler_text) {
-              compose.sensitive = true;
               compose.spoilerText = status.spoiler_text;
             }
           });
         },
 
-        //         quoteCompose: (status, scopeUrl, columnId, approvalRequired, openComposer = true) => {
-        //           const doCompose = (composeId: string) =>
-        //             set((draft) => {
-        //               const { defaultPrivacy } = useSettingsStore.getState().settings;
+        quoteCompose: (status, scopeUrl, approvalRequired) => {
+          const {
+            'compose.preserveSpoilers': preserveSpoilers,
+            'compose.defaultPrivacy': defaultPrivacy,
+          } = useSettingsStore.getState().settings;
 
-        //               draft.composers[composeId] = {
-        //                 ...draft.default,
-        //                 idempotencyKey: uuid(),
-        //               };
-        //               const compose = draft.composers[composeId];
+          set((draft) => {
+            draft.composers['compose-modal'] = {
+              ...draft.default,
+              idempotencyKey: uuid(),
+            };
+            const compose = draft.composers['compose-modal'];
 
-        //               const statusAccount = selectAccount(status.account_id, scopeUrl);
-        //               const author = statusAccount?.acct ?? '';
+            const statusAccount = selectAccount(status.account_id, scopeUrl);
+            const author = statusAccount?.acct ?? '';
 
-        //               compose.quoteId = status.id;
-        //               compose.to = [author];
-        //               compose.parentRebloggedById = null;
-        //               compose.text = '';
-        //               compose.visibility = privacyPreference(
-        //                 status.visibility,
-        //                 draft.default.visibility === 'default' ? defaultPrivacy : draft.default.visibility,
-        //                 status.list_id,
-        //               );
-        //               compose.caretPosition = null;
-        //               compose.contentType = draft.default.contentType;
-        //               compose.spoilerText = '';
-        //               compose.approvalRequired = approvalRequired ?? false;
+            compose.quoteId = status.id;
+            compose.to = [author];
+            compose.parentRebloggedById = null;
+            compose.text = '';
+            compose.visibility = privacyPreference(
+              status.visibility,
+              draft.default.visibility === 'default' ? defaultPrivacy : draft.default.visibility,
+              status.list_id,
+            );
+            compose.caretPosition = null;
+            compose.contentType = draft.default.contentType;
+            compose.approvalRequired = approvalRequired ?? false;
+            if (preserveSpoilers && status.spoiler_text) {
+              compose.spoilerText = status.spoiler_text;
+            }
 
-        //               if (status.visibility === 'group') {
-        //                 compose.groupId = status.group_id;
-        //                 compose.visibility = 'group';
-        //               }
-        //             });
-
-        //           composeInteraction(
-        //             doCompose,
-        //             scopeUrl,
-        //             columnId,
-        //             { approvalRequired, quote: status.id },
-        //             openComposer,
-        //           );
-        //         },
+            if (status.visibility === 'group') {
+              compose.groupId = status.group_id;
+              compose.visibility = 'group';
+            }
+          });
+        },
 
         //         mentionCompose: (account, scopeUrl, columnId) => {
         //           if (!isLoggedIn()) return;

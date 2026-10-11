@@ -1,19 +1,20 @@
-import { IconButton, Text, Tooltip, useTheme } from '@mkljczk/react-native-paper';
+import { IconButton, Menu, Text, Tooltip, useTheme } from '@mkljczk/react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import {
   ArrowBendDoubleUpLeftIcon,
   ArrowBendUpLeftIcon,
+  QuotesIcon,
   RepeatIcon,
   StarIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from 'phosphor-react-native';
 import React from 'react';
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { View } from 'react-native';
 
 import { useFeatures } from '@/contexts/current-account-context';
-import { useInteractionMessages } from '@/hooks/use-can-interact';
+import { useCanInteract, useInteractionMessages } from '@/hooks/use-can-interact';
 import { useScopeUrl } from '@/hooks/use-scope-url';
 import {
   useDislikeStatus,
@@ -100,20 +101,42 @@ const ReplyAction: React.FC<IStatusActions> = ({ status }) => {
 const ReblogAction: React.FC<IStatusActions> = ({ status }) => {
   const intl = useIntl();
   const theme = useTheme();
+  const { quoteCompose } = useComposeActions();
+  const { openCompose } = useUiStoreActions();
   const navigation = useNavigation();
+  const features = useFeatures();
+
+  const scopeUrl = useScopeUrl();
 
   const interactionTooltip = useInteractionMessages(status, 'can_reblog');
+  const { canInteract: canQuote, approvalRequired } = useCanInteract(status, 'can_quote');
+
+  const [showMenu, setShowMenu] = React.useState(false);
 
   const { mutate: reblogStatus, isPending: isPendingReblog } = useReblogStatus(status.id);
   const { mutate: unreblogStatus } = useUnreblogStatus(status.id);
 
   const publicStatus = ['public', 'unlisted', 'group'].includes(status.visibility);
 
-  const renderAction = (props: TooltipTriggerProps) => (
+  const handleReblog = () => {
+    if (status.reblogged) unreblogStatus();
+    else reblogStatus({});
+
+    setShowMenu(false);
+  };
+
+  const handleQuote = () => {
+    quoteCompose(status, scopeUrl, approvalRequired || false);
+    openCompose();
+
+    setShowMenu(false);
+  };
+
+  const renderAction = (props: Partial<TooltipTriggerProps>, action?: () => void) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
       <IconButton
         icon={(props) => <RepeatIcon {...props} weight={status.reblogged ? 'fill' : undefined} />}
-        onPress={() => (status.reblogged ? unreblogStatus() : reblogStatus({}))}
+        onPress={action || handleReblog}
         disabled={isPendingReblog || !publicStatus}
         style={{ margin: -4, height: 40, width: 40 }}
         selected={status.reblogged}
@@ -149,6 +172,32 @@ const ReblogAction: React.FC<IStatusActions> = ({ status }) => {
       <Tooltip.Rich title={interactionTooltip.title} content={interactionTooltip.content}>
         {renderAction}
       </Tooltip.Rich>
+    );
+  } else if (features.quotePosts && canQuote) {
+    return (
+      <Menu
+        visible={showMenu}
+        onDismiss={() => setShowMenu(false)}
+        anchor={renderAction({}, () => setShowMenu(true))}
+        anchorPosition='bottom'
+      >
+        <Menu.Item
+          title={
+            status.reblogged ? (
+              <FormattedMessage id='status.unreblog' defaultMessage='Unrepost' />
+            ) : (
+              <FormattedMessage id='status.reblog' defaultMessage='Repost' />
+            )
+          }
+          leadingIcon={iconHelper(RepeatIcon)}
+          onPress={handleReblog}
+        />
+        <Menu.Item
+          title={<FormattedMessage id='status.quote' defaultMessage='Quote' />}
+          leadingIcon={iconHelper(QuotesIcon)}
+          onPress={handleQuote}
+        />
+      </Menu>
     );
   }
 
