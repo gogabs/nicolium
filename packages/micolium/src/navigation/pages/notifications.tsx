@@ -37,6 +37,7 @@ import type { NotificationsStackParams } from '../router';
 
 const messages = defineMessages({
   tabAll: { id: 'notifications.filter.all', defaultMessage: 'All' },
+  tabFiltered: { id: 'notifications.filter.all.filtered', defaultMessage: 'Filtered' },
   tabMentions: { id: 'notifications.filter_mentions', defaultMessage: 'Mentions' },
 });
 
@@ -310,7 +311,9 @@ const NotificationsScreen = ({
   return (
     <TabsProvider defaultIndex={0} onChangeIndex={handleChangeIndex}>
       <Tabs style={{ backgroundColor: colors.surfaceContainer }} uppercase={false}>
-        <TabScreen label={intl.formatMessage(messages.tabAll)}>
+        <TabScreen
+          label={intl.formatMessage(filters.length ? messages.tabFiltered : messages.tabAll)}
+        >
           {renderNotifications('all')}
         </TabScreen>
         <TabScreen label={intl.formatMessage(messages.tabMentions)}>
