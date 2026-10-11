@@ -489,7 +489,7 @@ const Status: React.FC<IStatus> = ({
     );
   }
 
-  return <View style={{ ...style, padding: 16 }}>{statusBody}</View>;
+  return <View style={{ padding: 16, ...style }}>{statusBody}</View>;
 };
 
 export { Status };

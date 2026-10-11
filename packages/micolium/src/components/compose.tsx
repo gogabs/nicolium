@@ -4,7 +4,6 @@ import {
   BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import {
-  ActivityIndicator,
   Card,
   Icon,
   IconButton,
@@ -81,17 +80,20 @@ interface ICompose {
 const ReplyIndicator: React.FC<ICompose> = ({ composeId = COMPOSE_ID }) => {
   const { inReplyToId } = useCompose(composeId);
   const { updateCompose } = useComposeActions();
-  const { data: status, isPending } = useStatus(inReplyToId || undefined);
+  const { data: status } = useStatus(inReplyToId || undefined);
 
   if (!status) return null;
 
   return (
-    <View style={{ gap: 4 }}>
+    <Card mode='outlined'>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
+          paddingHorizontal: 16,
+          paddingTop: 8,
+          paddingBottom: 4,
         }}
       >
         <Icon source={iconHelper(ArrowBendUpLeftIcon)} size={20} />
@@ -104,39 +106,37 @@ const ReplyIndicator: React.FC<ICompose> = ({ composeId = COMPOSE_ID }) => {
         </Text>
         <IconButton
           icon={iconHelper(XIcon)}
-          style={{ margin: 0 }}
+          style={{ margin: 0, marginRight: -8 }}
           onPress={() =>
             updateCompose(composeId, (draft) => {
               draft.inReplyToId = null;
             })
           }
+          size={20}
         />
       </View>
-      <Card mode='outlined'>
-        {isPending ? (
-          <ActivityIndicator />
-        ) : (
-          <Status id={inReplyToId!} compact withActions={false} textOnly />
-        )}
-      </Card>
-    </View>
+      <Status id={inReplyToId!} compact withActions={false} textOnly style={{ paddingTop: 0 }} />
+    </Card>
   );
 };
 
 const QuoteIndicator: React.FC<ICompose> = ({ composeId = COMPOSE_ID }) => {
   const { quoteId } = useCompose(composeId);
   const { updateCompose } = useComposeActions();
-  const { data: status, isPending } = useStatus(quoteId || undefined);
+  const { data: status } = useStatus(quoteId || undefined);
 
   if (!status) return null;
 
   return (
-    <View style={{ gap: 4 }}>
+    <Card mode='outlined'>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
+          paddingHorizontal: 16,
+          paddingTop: 8,
+          paddingBottom: 4,
         }}
       >
         <Icon source={iconHelper(QuotesIcon)} size={20} />
@@ -149,22 +149,17 @@ const QuoteIndicator: React.FC<ICompose> = ({ composeId = COMPOSE_ID }) => {
         </Text>
         <IconButton
           icon={iconHelper(XIcon)}
-          style={{ margin: 0 }}
+          style={{ margin: 0, marginRight: -8 }}
           onPress={() =>
-            updateCompose(COMPOSE_ID, (draft) => {
+            updateCompose(composeId, (draft) => {
               draft.quoteId = null;
             })
           }
+          size={20}
         />
       </View>
-      <Card mode='outlined'>
-        {isPending ? (
-          <ActivityIndicator />
-        ) : (
-          <Status id={quoteId!} compact withActions={false} textOnly />
-        )}
-      </Card>
-    </View>
+      <Status id={quoteId!} compact withActions={false} textOnly style={{ paddingTop: 0 }} />
+    </Card>
   );
 };
 
