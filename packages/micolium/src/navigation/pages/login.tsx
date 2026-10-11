@@ -136,7 +136,7 @@ const normalizeInstanceUrl = (input: string) => {
     return normalizedInput;
   }
 
-  return `https://${normalizeInstanceUrl}`;
+  return `https://${normalizedInput}`;
 };
 
 const LoginScreen = ({ navigation }: NativeStackScreenProps<LoginStackParams, 'instance'>) => {
@@ -157,6 +157,7 @@ const LoginScreen = ({ navigation }: NativeStackScreenProps<LoginStackParams, 'i
 
     setLoading(true);
     try {
+      console.log(instanceUrl);
       await fetchInstance(instanceUrl);
       setLoading(false);
       if (!useAuthStore.getState().pendingAuthClient?.features.grantTypePassword) {
