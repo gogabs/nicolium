@@ -67,7 +67,9 @@ const StatusHeader = ({ navigation, route, back }: NativeStackHeaderProps) => {
     case 'view':
       title = intl.formatMessage(status ? messages.statusByAuthorHeader : messages.statusHeader, {
         name: status?.account ? (
-          <Emojify text={status.account.display_name} emojis={status.account.emojis} />
+          <Text>
+            <Emojify text={status.account.display_name} emojis={status.account.emojis} />
+          </Text>
         ) : undefined,
       });
       break;
