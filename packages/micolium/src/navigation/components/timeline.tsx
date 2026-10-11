@@ -98,6 +98,7 @@ const Timeline: React.FC<ITimeline> = ({
       ListFooterComponent={<LoadMore query={query} />}
       ListHeaderComponent={header}
       onScroll={onScroll}
+      contentInsetAdjustmentBehavior='automatic'
     />
   );
 };

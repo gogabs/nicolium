@@ -1,6 +1,6 @@
 import { BottomNavigation } from '@mkljczk/react-native-paper';
 import { type BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-// import { createNativeBottomTabNavigator } from '@react-navigation/bottom-tabs/unstable';
+import { createNativeBottomTabNavigator } from '@react-navigation/bottom-tabs/unstable';
 import { CommonActions } from '@react-navigation/native';
 import {
   BellSimpleIcon,
@@ -11,10 +11,11 @@ import {
 import React from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import { View } from 'react-native';
-// import { Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CurrentAccountAvatar } from '@/components/current-account-avatar';
+import { useNotificationsUnreadCount } from '@/queries/notifications/use-notifications';
 import { useUiStoreActions } from '@/stores/ui';
 
 import { HomeStackScreen } from './pages/home';
@@ -31,161 +32,175 @@ const messages = defineMessages({
   profile: { id: 'column.profile', defaultMessage: 'Profile' },
 });
 
-const TabBar = ({ navigation, state, descriptors }: BottomTabBarProps) => {
-  const insets = useSafeAreaInsets();
-  const { openAccountSwitcher } = useUiStoreActions();
-
-  return (
-    <BottomNavigation.Bar
-      navigationState={state}
-      safeAreaInsets={insets}
-      onTabPress={({ route, preventDefault }) => {
-        const event = navigation.emit({
-          type: 'tabPress',
-          target: route.key,
-          canPreventDefault: true,
-        });
-        if (event.defaultPrevented) {
-          preventDefault();
-        } else {
-          navigation.dispatch({
-            ...CommonActions.navigate(route.name, route.params),
-            target: state.key,
-          });
-        }
-      }}
-      onTabLongPress={({ route }) => {
-        if (route.name !== 'profile') return;
-
-        return openAccountSwitcher();
-      }}
-      renderIcon={({ route, focused, color }) =>
-        descriptors[route.key].options.tabBarIcon?.({
-          focused,
-          color: color.toString(),
-          size: 24,
-        }) ?? null
-      }
-      getLabelText={({ route }) => {
-        const { options } = descriptors[route.key];
-        return typeof options.tabBarLabel === 'string'
-          ? options.tabBarLabel
-          : typeof options.title === 'string'
-            ? options.title
-            : route.name;
-      }}
-    />
-  );
-};
+let Tabs;
 
 // @ts-ignore
-// if (Platform.OS === 'never_matches') {
-//   const Tab = createNativeBottomTabNavigator<TabsParams>();
+if (Platform.OS === 'ios') {
+  const Tab = createNativeBottomTabNavigator<TabsParams>();
 
-//   Tabs = () => {
-//     const intl = useIntl();
+  Tabs = () => {
+    const intl = useIntl();
+    const unreadCount = useNotificationsUnreadCount();
 
-//     return (
-//       <Tab.Navigator
-//         tabBar={(props) => <TabBar {...props} />}
-//         screenOptions={{ headerShown: false }}
-//       >
-//         <Tab.Screen
-//           name='timeline'
-//           component={HomeStackScreen}
-//           options={{
-//             tabBarLabel: intl.formatMessage(messages.home),
-//             tabBarIcon: {
-//               type: 'sfSymbol',
-//               name: 'house',
-//             },
-//           }}
-//         />
-//         <Tab.Screen
-//           name='search'
-//           component={SearchStackScreen}
-//           options={{
-//             tabBarLabel: intl.formatMessage(messages.search),
-//             tabBarIcon: {
-//               type: 'sfSymbol',
-//               name: 'magnifyingglass',
-//             },
-//           }}
-//         />
-//         <Tab.Screen
-//           name='notifications'
-//           component={NotificationsStackScreen}
-//           options={{
-//             tabBarLabel: intl.formatMessage(messages.notifications),
-//             tabBarIcon: {
-//               type: 'sfSymbol',
-//               name: 'bell',
-//             },
-//           }}
-//         />
-//       </Tab.Navigator>
-//     );
-//   };
-// } else {
+    return (
+      <Tab.Navigator screenOptions={{ headerShown: false }}>
+        <Tab.Screen
+          name='timeline'
+          component={HomeStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.home),
+            tabBarIcon: {
+              type: 'sfSymbol',
+              name: 'house.fill',
+            },
+          }}
+        />
+        <Tab.Screen
+          name='search'
+          component={SearchStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.search),
+            tabBarIcon: {
+              type: 'sfSymbol',
+              name: 'magnifyingglass',
+            },
+          }}
+        />
+        <Tab.Screen
+          name='notifications'
+          component={NotificationsStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.notifications),
+            tabBarIcon: {
+              type: 'sfSymbol',
+              name: 'bell',
+            },
+            tabBarBadge: unreadCount || undefined,
+          }}
+        />
+        <Tab.Screen
+          name='profile'
+          component={ProfileStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.profile),
+            tabBarIcon: {
+              type: 'sfSymbol',
+              name: 'person',
+            },
+          }}
+        />
+      </Tab.Navigator>
+    );
+  };
+} else {
+  const TabBar = ({ navigation, state, descriptors }: BottomTabBarProps) => {
+    const insets = useSafeAreaInsets();
+    const { openAccountSwitcher } = useUiStoreActions();
 
-const ProfileIcon: React.FC<{ color: string }> = ({ color }) => (
-  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 18 }}>
-    <CurrentAccountAvatar />
-    <CaretUpDownIcon size={16} color={color} />
-  </View>
-);
-
-const Tab = createBottomTabNavigator<TabsParams>();
-
-const Tabs = () => {
-  const intl = useIntl();
-
-  return (
-    <Tab.Navigator
-      tabBar={(props) => <TabBar {...props} />}
-      screenOptions={{ headerShown: false, animation: 'shift' }}
-    >
-      <Tab.Screen
-        name='timeline'
-        component={HomeStackScreen}
-        options={{
-          tabBarLabel: intl.formatMessage(messages.home),
-          tabBarIcon: ({ color, focused }) => (
-            <HouseIcon color={color} weight={focused ? 'fill' : undefined} />
-          ),
+    return (
+      <BottomNavigation.Bar
+        navigationState={state}
+        safeAreaInsets={insets}
+        onTabPress={({ route, preventDefault }) => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+          if (event.defaultPrevented) {
+            preventDefault();
+          } else {
+            navigation.dispatch({
+              ...CommonActions.navigate(route.name, route.params),
+              target: state.key,
+            });
+          }
         }}
-      />
-      <Tab.Screen
-        name='search'
-        component={SearchStackScreen}
-        options={{
-          tabBarLabel: intl.formatMessage(messages.search),
-          tabBarIcon: ({ color, focused }) => (
-            <MagnifyingGlassIcon color={color} weight={focused ? 'fill' : undefined} />
-          ),
+        onTabLongPress={({ route }) => {
+          if (route.name !== 'profile') return;
+
+          return openAccountSwitcher();
         }}
-      />
-      <Tab.Screen
-        name='notifications'
-        component={NotificationsStackScreen}
-        options={{
-          tabBarLabel: intl.formatMessage(messages.notifications),
-          tabBarIcon: ({ color, focused }) => (
-            <BellSimpleIcon color={color} weight={focused ? 'fill' : undefined} />
-          ),
+        renderIcon={({ route, focused, color }) =>
+          descriptors[route.key].options.tabBarIcon?.({
+            focused,
+            color: color.toString(),
+            size: 24,
+          }) ?? null
+        }
+        getLabelText={({ route }) => {
+          const { options } = descriptors[route.key];
+          return typeof options.tabBarLabel === 'string'
+            ? options.tabBarLabel
+            : typeof options.title === 'string'
+              ? options.title
+              : route.name;
         }}
+        getBadge={({ route }) => descriptors[route.key].options.tabBarBadge}
       />
-      <Tab.Screen
-        name='profile'
-        component={ProfileStackScreen}
-        options={{
-          tabBarLabel: intl.formatMessage(messages.profile),
-          tabBarIcon: ProfileIcon,
-        }}
-      />
-    </Tab.Navigator>
+    );
+  };
+
+  const ProfileIcon: React.FC<{ color: string }> = ({ color }) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 18 }}>
+      <CurrentAccountAvatar />
+      <CaretUpDownIcon size={16} color={color} />
+    </View>
   );
-};
-// }
+
+  const Tab = createBottomTabNavigator<TabsParams>();
+
+  Tabs = () => {
+    const intl = useIntl();
+    const unreadCount = useNotificationsUnreadCount();
+
+    return (
+      <Tab.Navigator
+        tabBar={(props) => <TabBar {...props} />}
+        screenOptions={{ headerShown: false, animation: 'shift' }}
+      >
+        <Tab.Screen
+          name='timeline'
+          component={HomeStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.home),
+            tabBarIcon: ({ color, focused }) => (
+              <HouseIcon color={color} weight={focused ? 'fill' : undefined} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name='search'
+          component={SearchStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.search),
+            tabBarIcon: ({ color, focused }) => (
+              <MagnifyingGlassIcon color={color} weight={focused ? 'fill' : undefined} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name='notifications'
+          component={NotificationsStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.notifications),
+            tabBarIcon: ({ color, focused }) => (
+              <BellSimpleIcon color={color} weight={focused ? 'fill' : undefined} />
+            ),
+            tabBarBadge: unreadCount || undefined,
+          }}
+        />
+        <Tab.Screen
+          name='profile'
+          component={ProfileStackScreen}
+          options={{
+            tabBarLabel: intl.formatMessage(messages.profile),
+            tabBarIcon: ProfileIcon,
+          }}
+        />
+      </Tab.Navigator>
+    );
+  };
+}
 
 export { Tabs };

@@ -12,9 +12,10 @@ import {
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { FlashList } from '@shopify/flash-list';
+import { GlassView, isGlassEffectAPIAvailable } from 'expo-glass-effect';
 import React from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Account } from '@/components/accounts/account';
@@ -139,6 +140,7 @@ const ReplyBox: React.FC<IReplyBox> = ({ status }) => {
   const { colors } = useTheme();
   const { replyCompose } = useComposeActions();
   const { openCompose } = useUiStoreActions();
+  const glassEffect = isGlassEffectAPIAvailable();
 
   const canReply = useCanInteract(status, 'can_reply');
 
@@ -153,6 +155,54 @@ const ReplyBox: React.FC<IReplyBox> = ({ status }) => {
     replyCompose(status, scopeUrl, features);
     openCompose();
   };
+
+  const content = (
+    <>
+      <CurrentAccountAvatar />
+      <Text>
+        <FormattedMessage
+          id='status.reply_to'
+          defaultMessage='Reply to {name}'
+          values={{
+            name: <Emojify text={status.account.display_name} emojis={status.account.emojis} />,
+          }}
+        />
+      </Text>
+    </>
+  );
+
+  if (glassEffect) {
+    return (
+      <Pressable
+        onPress={handleReply}
+        style={{
+          marginTop: 8,
+          marginBottom: 8 + bottomInset,
+          marginHorizontal: 16,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+        }}
+      >
+        <GlassView
+          style={{
+            gap: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 8,
+            backgroundColor: colors.surfaceVariant,
+            borderRadius: 20,
+            overflow: 'hidden',
+          }}
+          glassEffectStyle='clear'
+          isInteractive
+        >
+          {content}
+        </GlassView>
+      </Pressable>
+    );
+  }
 
   return (
     <View
@@ -177,18 +227,7 @@ const ReplyBox: React.FC<IReplyBox> = ({ status }) => {
         }}
         onPress={handleReply}
       >
-        <>
-          <CurrentAccountAvatar />
-          <Text>
-            <FormattedMessage
-              id='status.reply_to'
-              defaultMessage='Reply to {name}'
-              values={{
-                name: <Emojify text={status.account.display_name} emojis={status.account.emojis} />,
-              }}
-            />
-          </Text>
-        </>
+        {content}
       </TouchableRipple>
     </View>
   );
@@ -226,10 +265,12 @@ const StatusViewScreen = ({
     params: { id },
   },
 }: NativeStackScreenProps<StatusStackParams, 'view'>) => {
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const { colors } = useTheme();
   const { data: status } = useStatus(id);
   const contextQuery = useStatusContext(id);
   const thread = useThread(id);
+  const glassEffect = isGlassEffectAPIAvailable();
 
   return (
     <>
@@ -251,7 +292,14 @@ const StatusViewScreen = ({
         initialScrollIndex={thread.indexOf(id)}
         ListFooterComponent={
           contextQuery.isPending && !status?.in_reply_to_id ? (
-            <ActivityIndicator style={{ marginVertical: 8 }} />
+            <ActivityIndicator
+              style={{
+                marginVertical: 8,
+                marginBottom: glassEffect ? 64 + bottomInset : undefined,
+              }}
+            />
+          ) : glassEffect ? (
+            <View style={{ height: 56 + bottomInset }} />
           ) : undefined
         }
         ListHeaderComponent={

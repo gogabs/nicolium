@@ -304,6 +304,7 @@ const NotificationsScreen = ({
           ) : null
         }
         ListFooterComponent={<LoadMore query={query} />}
+        contentInsetAdjustmentBehavior='automatic'
       />
     );
   };
