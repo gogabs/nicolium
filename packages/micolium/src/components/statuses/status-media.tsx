@@ -85,7 +85,6 @@ const StatusGifv: React.FC<IMediaVideo> = ({ media }) => {
 };
 
 const StatusVideoPlayer: React.FC<IMediaVideo> = ({ media }) => {
-  console.log(media);
   const { colors } = useTheme();
   const isFocused = useIsFocused();
   const player = useVideoPlayer(media.url, (player) => {
