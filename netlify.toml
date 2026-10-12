@@ -1,5 +1,5 @@
 [build]
-  command = "npx --yes pnpm@11.17.0 install && npx --yes pnpm@11.17.0 -F pl-api build && npx --yes pnpm@11.17.0 -F nicolium build"
+  command = "npx --yes pnpm@11.17.0 install --filter nicolium... && npx --yes pnpm@11.17.0 -F pl-api build && npx --yes pnpm@11.17.0 -F nicolium build"
   publish = "packages/nicolium/dist"
 
 [build.environment]
