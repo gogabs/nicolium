@@ -1,0 +1,21 @@
+[build]
+  command = "npx --yes pnpm@11.17.0 install && npx --yes pnpm@11.17.0 -F pl-api build && npx --yes pnpm@11.17.0 -F nicolium build"
+  publish = "packages/nicolium/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0"
+
+[[headers]]
+  for = "/packs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
