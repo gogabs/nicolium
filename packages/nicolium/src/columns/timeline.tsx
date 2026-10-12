@@ -508,7 +508,10 @@ const Timeline: React.FC<ITimeline> = ({
   const featuredCount = featuredStatusIds?.length ?? 0;
   const totalCount = featuredCount + entries.length;
 
-  /** Focus the most recent entry, showing queued entries first. */
+  /**
+   * Focus the most recent entry, showing queued entries first, or loading the most recent
+   * posts first when the timeline starts with a gap.
+   */
   const focusNewest = () => {
     const focus = () =>
       selectChild(
@@ -519,9 +522,15 @@ const Timeline: React.FC<ITimeline> = ({
         'start',
       );
 
+    const firstEntry = entries[0];
+
     if (queuedCount > 0) {
       dequeueEntries();
       setTimeout(focus, 100);
+    } else if (firstEntry?.type === 'gap') {
+      fillGap(firstEntry, 'down')
+        .catch(console.error)
+        .finally(() => setTimeout(focus, 100));
     } else {
       focus();
     }
