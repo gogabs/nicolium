@@ -4,7 +4,7 @@ import iconCaretDoubleUp from '@phosphor-icons/core/regular/caret-double-up.svg'
 import iconRepeat from '@phosphor-icons/core/regular/repeat.svg';
 import iconRocketLaunch from '@phosphor-icons/core/regular/rocket-launch.svg';
 import clsx from 'clsx';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { defineMessages, FormattedList, FormattedMessage, useIntl } from 'react-intl';
 
 import { AccountLink } from '@/components/accounts/account-link';
@@ -42,6 +42,7 @@ import {
 import { useSettings } from '@/stores/settings';
 import { useStatusMeta } from '@/stores/status-meta';
 import { useQueuedEntries, type TimelineEntry } from '@/stores/timelines';
+import { FOCUS_NEWEST_EVENT } from '@/utils/focus-newest';
 import { userTouching } from '@/utils/is-mobile';
 import { selectChild } from '@/utils/scroll-utils';
 import { hasActiveFilters, sortFilteredTimeline } from '@/utils/timeline-filter';
@@ -51,6 +52,7 @@ import type { TimelineFilters } from '@/schemas/frontend-settings';
 import type { VirtuosoHandle } from 'react-virtuoso';
 
 const messages = defineMessages({
+  feed: { id: 'timeline.feed', defaultMessage: 'Posts' },
   queue: {
     id: 'status_list.queue.label',
     defaultMessage: 'Click to see {count} new {count, plural, one {post} other {posts}}',
@@ -339,6 +341,8 @@ interface ITimelineStatus {
   onMoveUp?: (id: string) => void | boolean;
   onMoveDown?: (id: string) => void | boolean;
   featured?: boolean;
+  posInSet?: number;
+  setSize?: number;
 }
 
 /** Status with reply-connector in threads. */
@@ -431,6 +435,7 @@ const Timeline: React.FC<ITimeline> = ({
   conditionalPullToRefresh,
   ...props
 }) => {
+  const intl = useIntl();
   const columnId: string = useRef(`timeline-${crypto.randomUUID()}`).current;
   const node = useRef<VirtuosoHandle | null>(null);
 
@@ -501,6 +506,42 @@ const Timeline: React.FC<ITimeline> = ({
     selectChild(index + 1, node, document.getElementById(columnId) ?? undefined, entries.length);
   };
 
+  const featuredCount = featuredStatusIds?.length ?? 0;
+  const totalCount = featuredCount + entries.length;
+
+  /** Focus the most recent entry, showing queued entries first. */
+  const focusNewest = () => {
+    const focus = () =>
+      selectChild(
+        featuredCount,
+        node,
+        document.getElementById(columnId) ?? undefined,
+        undefined,
+        'start',
+      );
+
+    if (queuedCount > 0) {
+      dequeueEntries();
+      setTimeout(focus, 100);
+    } else {
+      focus();
+    }
+  };
+
+  const focusNewestRef = useRef(focusNewest);
+  focusNewestRef.current = focusNewest;
+
+  useEffect(() => {
+    const listener = (event: Event) => {
+      const feed = (event as CustomEvent<{ feed: Element }>).detail?.feed;
+      if (feed && document.getElementById(columnId)?.contains(feed)) {
+        focusNewestRef.current();
+      }
+    };
+    document.addEventListener(FOCUS_NEWEST_EVENT, listener);
+    return () => document.removeEventListener(FOCUS_NEWEST_EVENT, listener);
+  }, [columnId]);
+
   const handleSkipPinned = () => {
     const skipPinned = () => {
       selectChild(
@@ -535,6 +576,8 @@ const Timeline: React.FC<ITimeline> = ({
           contextType={contextType}
           onMoveUp={() => handleMoveUp(index)}
           onMoveDown={() => handleMoveDown(index)}
+          posInSet={index + 1}
+          setSize={hasNextPage ? -1 : totalCount}
           rebloggedBy={entry.rebloggedBy}
           reblogVisibility={entry.reblogVisibility}
           timelineId={timelineId}
@@ -570,6 +613,8 @@ const Timeline: React.FC<ITimeline> = ({
             contextType={contextType}
             onMoveUp={() => handleMoveUp(index)}
             onMoveDown={() => handleMoveDown(index)}
+            posInSet={index + 1}
+            setSize={hasNextPage ? -1 : totalCount}
             rebloggedBy={[]}
             timelineId={timelineId}
             featured
@@ -606,7 +651,7 @@ const Timeline: React.FC<ITimeline> = ({
     });
 
     return rendered;
-  }, [entries, contextType, timelineId, featuredStatusIds, filters]);
+  }, [entries, contextType, timelineId, featuredStatusIds, filters, hasNextPage]);
 
   if (isError === 401 && entries.length === 0) {
     const body = (
@@ -641,6 +686,8 @@ const Timeline: React.FC<ITimeline> = ({
         ref={node}
         hasMore={hasNextPage}
         onLoadMore={fetchNextPage}
+        listRole='feed'
+        listLabel={intl.formatMessage(messages.feed)}
         {...props}
       >
         {renderedEntries}

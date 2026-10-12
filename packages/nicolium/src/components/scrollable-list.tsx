@@ -23,6 +23,8 @@ import { EmptyMessage } from './empty-message';
 type Context = {
   itemClassName?: string;
   listClassName?: string;
+  listRole?: string;
+  listLabel?: string;
   prepend?: React.ReactNode;
   footer?: React.ReactNode;
   empty?: React.ReactNode;
@@ -46,7 +48,15 @@ const Item: Components<React.JSX.Element, Context>['Item'] = ({ context, ...rest
 // Ensure the className winds up here
 const List: Components<React.JSX.Element, Context>['List'] = React.forwardRef((props, ref) => {
   const { context, ...rest } = props;
-  return <div ref={ref} className={context?.listClassName} {...rest} />;
+  return (
+    <div
+      ref={ref}
+      className={context?.listClassName}
+      role={context?.listRole}
+      aria-label={context?.listLabel}
+      {...rest}
+    />
+  );
 });
 
 List.displayName = 'List';
@@ -98,6 +108,10 @@ interface IScrollableList extends VirtuosoProps<any, any> {
   className?: string;
   /** Extra class names on the list element. */
   listClassName?: string;
+  /** ARIA role on the list element, eg. `feed` for timelines. */
+  listRole?: string;
+  /** Accessible name of the list element. */
+  listLabel?: string;
   /** Class names on each item container. */
   itemClassName?: string;
   /** Extra class names on the LoadMore element */
@@ -127,6 +141,8 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
       onTopItemChanged,
       className,
       listClassName,
+      listRole,
+      listLabel,
       itemClassName,
       loadMoreClassName,
       hasMore,
@@ -293,8 +309,8 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
     };
 
     const context = useMemo<Context>(
-      () => ({ listClassName, itemClassName, prepend, footer, empty }),
-      [listClassName, itemClassName, prepend, footer, empty],
+      () => ({ listClassName, listRole, listLabel, itemClassName, prepend, footer, empty }),
+      [listClassName, listRole, listLabel, itemClassName, prepend, footer, empty],
     );
 
     /** Figure out the initial index to scroll to. */
