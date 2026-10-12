@@ -665,6 +665,7 @@ const AccountColumnBody: React.FC<IAccountColumnBody> = ({
       username={username}
       account={account}
       withStatusesLink={false}
+      headingLevel={2}
     />
     {accountId && (
       <AccountTimelineColumn

@@ -110,7 +110,16 @@ const ProfileLayout: React.FC = () => {
           />
 
           {account && showTabs && (
-            <Tabs key={`profile-tabs-${account.id}`} items={tabItems} activeItem={activeItem} />
+            <>
+              <h2 className='sr-only'>
+                <FormattedMessage
+                  id='account.posts_heading'
+                  defaultMessage='Posts by {name}'
+                  values={{ name: account.username }}
+                />
+              </h2>
+              <Tabs key={`profile-tabs-${account.id}`} items={tabItems} activeItem={activeItem} />
+            </>
           )}
 
           <Outlet />

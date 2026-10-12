@@ -193,6 +193,16 @@
   flex-direction: column;
   gap: 0.5rem;
 
+  // Stats come after the bio in the DOM, so screen readers get name, bio and fields first,
+  // but are displayed right below the name.
+  > .account-info-panel__name {
+    order: -2;
+  }
+
+  > .account-stats {
+    order: -1;
+  }
+
   &__container {
     z-index: 1;
     flex: 1;
@@ -220,7 +230,8 @@
       align-items: center;
       @include mixins.text($size: lg, $weight: bold);
 
-      p {
+      p,
+      .account-info-panel__name__text {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

@@ -34,6 +34,10 @@ interface IAvatar extends Pick<IStillImage, 'alt' | 'src' | 'staticSrc' | 'onErr
   /** Whether the user is a cat. */
   isCat?: boolean;
   username?: string;
+  /**
+   * Whether the avatar is described to screen readers, eg. on the profile page.
+   * Elsewhere it is decorative, as the account name is shown next to it.
+   */
   showAlt?: boolean;
   isDefault?: boolean;
 }
@@ -114,12 +118,14 @@ const Avatar: React.FC<IAvatar> = (props) => {
     );
   }
 
-  const altText =
-    props.showAlt && alt
+  let altText = '';
+  if (props.showAlt) {
+    altText = alt
       ? intl.formatMessage(messages.avatarWithContent, { username: props.username, alt })
       : props.username
         ? intl.formatMessage(messages.avatarWithUsername, { username: props.username })
         : intl.formatMessage(messages.avatar);
+  }
 
   return (
     <StillImage

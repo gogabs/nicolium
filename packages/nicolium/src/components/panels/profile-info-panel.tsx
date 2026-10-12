@@ -44,6 +44,7 @@ const messages = defineMessages({
     defaultMessage: 'You have assigned a nickname to this user.',
   },
   birthday: { id: 'account.birthday', defaultMessage: 'Born {date}' },
+  about: { id: 'account.about_heading', defaultMessage: 'About {name}' },
 });
 
 interface IProfileInfoPanel {
@@ -51,10 +52,19 @@ interface IProfileInfoPanel {
   /** Username from URL params, in case the account isn't found. */
   username: string;
   withStatusesLink: boolean;
+  /** Level of the heading with the display name. Section headings use the next level. */
+  headingLevel?: 1 | 2;
 }
 
 /** User profile metadata, such as location, birthday, etc. */
-const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username, withStatusesLink }) => {
+const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({
+  account,
+  username,
+  withStatusesLink,
+  headingLevel = 1,
+}) => {
+  const NameHeading = `h${headingLevel}` as const;
+  const SectionHeading = `h${headingLevel + 1}` as 'h2' | 'h3';
   const accountInfoNode = React.useRef<HTMLDivElement>(null);
   const intl = useIntl();
   const acct = useAcct(account);
@@ -193,9 +203,9 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username, with
       <div className='account-info-panel'>
         <div className='account-info-panel__name'>
           <div className='account-info-panel__name__display-name'>
-            <p>
+            <NameHeading className='account-info-panel__name__text'>
               <Emojify text={account.display_name} emojis={account.emojis} truncated />
-            </p>
+            </NameHeading>
 
             {((account.original_display_name &&
               account.original_display_name !== account.display_name) ||
@@ -225,7 +235,9 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username, with
           </div>
         </div>
 
-        <ProfileStats account={account} withStatusesLink={withStatusesLink} />
+        <SectionHeading className='sr-only'>
+          {intl.formatMessage(messages.about, { name: account.username })}
+        </SectionHeading>
 
         <div className='account-info__container' ref={accountInfoNode}>
           <div className={clsx('account-info', { 'account-info--collapsed': collapsed })}>
@@ -237,6 +249,23 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username, with
                   speakAsCat={account.speak_as_cat}
                   displayMentionAvatars={displayMentionAvatars}
                 />
+              </div>
+            )}
+
+            {account.fields.length > 0 && (
+              <div
+                className={clsx('account-info__fields', {
+                  'account-info__fields--optional': isContextDisplayed,
+                })}
+              >
+                {account.fields.map((field, i) => (
+                  <ProfileField
+                    field={field}
+                    key={i}
+                    emojis={account.emojis}
+                    accountId={account.id}
+                  />
+                ))}
               </div>
             )}
 
@@ -285,23 +314,6 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username, with
             {scrobble && <Scrobble scrobble={scrobble} withComposeButton={ownAccount} />}
 
             {ownAccount ? null : <ProfileFamiliarFollowers account={account} />}
-
-            {account.fields.length > 0 && (
-              <div
-                className={clsx('account-info__fields', {
-                  'account-info__fields--optional': isContextDisplayed,
-                })}
-              >
-                {account.fields.map((field, i) => (
-                  <ProfileField
-                    field={field}
-                    key={i}
-                    emojis={account.emojis}
-                    accountId={account.id}
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           {collapsed !== null && (
@@ -312,6 +324,9 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({ account, username, with
             />
           )}
         </div>
+
+        {/* Read after the bio, as on GoToSocial, but displayed right below the name. */}
+        <ProfileStats account={account} withStatusesLink={withStatusesLink} />
       </div>
     </div>
   );

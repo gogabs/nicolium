@@ -46,7 +46,14 @@ import type { Account as AccountEntity } from 'pl-api';
 const messages = defineMessages({
   chat: { id: 'account.chat', defaultMessage: 'Chat with @{name}' },
   share: { id: 'account.share', defaultMessage: 'Share @{name}’s profile' },
-  header: { id: 'account.header.alt', defaultMessage: 'Profile header' },
+  headerWithUsername: {
+    id: 'account.header.with_username',
+    defaultMessage: 'Header image for {username}',
+  },
+  headerWithContent: {
+    id: 'account.header.with_content',
+    defaultMessage: 'Header image for {username}: {alt}',
+  },
   subscribeFeed: { id: 'account.rss_feed', defaultMessage: 'Subscribe to RSS feed' },
   headerAlt: { id: 'account.header.alt.popover', defaultMessage: 'Show profile header alt text' },
 });
@@ -288,7 +295,14 @@ const AccountHeader: React.FC<IAccountHeader> = ({ account }) => {
       header = (
         <StillImage
           src={account.header}
-          alt={account.header_description || intl.formatMessage(messages.header)}
+          alt={
+            account.header_description
+              ? intl.formatMessage(messages.headerWithContent, {
+                  username: account.username,
+                  alt: account.header_description,
+                })
+              : intl.formatMessage(messages.headerWithUsername, { username: account.username })
+          }
         />
       );
 
