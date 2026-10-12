@@ -117,8 +117,8 @@ const attachmentLabel = (
 /**
  * Accessible name of a status, read by screen readers when the status gets focus.
  *
- * Order: author, reply context, content warning and text, attachments, poll, quote,
- * relative time, full handle, visibility (when not public), reposter.
+ * Order: author name and handle, reply context, content warning and text, attachments, poll,
+ * quote, relative time, visibility (when not public), reposter.
  */
 const textForScreenReader = (
   intl: IntlShape,
@@ -133,7 +133,7 @@ const textForScreenReader = (
   const { account } = status;
   if (!account || typeof account !== 'object') return '';
 
-  const values: string[] = [displayNameFor(account)];
+  const values: string[] = [displayNameFor(account), `@${account.acct}`];
 
   if (status.in_reply_to_id && status.mentions.length > 0) {
     values.push(
@@ -180,7 +180,7 @@ const textForScreenReader = (
     );
   }
 
-  values.push(relativeTime(intl, status.created_at), `@${account.acct}`);
+  values.push(relativeTime(intl, status.created_at));
 
   if (
     status.visibility === 'unlisted' ||
