@@ -134,14 +134,17 @@ const textForScreenReader = (
     rebloggedBy?: Array<Pick<SelectedStatus['account'], 'display_name' | 'acct'> | string>;
     spoilerExpanded?: boolean;
     scopeUrl: string;
+    /** Parts to leave out, eg. when the status is read as part of a notification. */
+    omit?: { author?: boolean; replyContext?: boolean; time?: boolean };
   },
 ): string => {
   const { account } = status;
   if (!account || typeof account !== 'object') return '';
 
-  const values: string[] = [displayNameFor(account), `@${account.acct}`];
+  const omit = options.omit ?? {};
+  const values: string[] = omit.author ? [] : [displayNameFor(account), `@${account.acct}`];
 
-  if (status.in_reply_to_id) {
+  if (status.in_reply_to_id && !omit.replyContext) {
     // A reply to one's own status continues a thread rather than answering someone.
     const isSelfReply = status.in_reply_to_account_id === account.id;
     const mentions = isSelfReply
@@ -194,7 +197,7 @@ const textForScreenReader = (
     );
   }
 
-  values.push(relativeTime(intl, status.created_at));
+  if (!omit.time) values.push(relativeTime(intl, status.created_at));
 
   if (
     status.visibility === 'unlisted' ||
@@ -229,4 +232,4 @@ const getStatusIdsFromLinksInContent = (content: string): string[] => {
   );
 };
 
-export { shouldHaveCard, textForScreenReader, getStatusIdsFromLinksInContent };
+export { shouldHaveCard, textForScreenReader, relativeTime, getStatusIdsFromLinksInContent };
