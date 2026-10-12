@@ -276,7 +276,8 @@ const config = defineConfig(() => ({
     alias: [
       {
         find: '@/',
-        replacement: fileURLToPath(new URL('./src/', import.meta.url)),
+        // Forward slashes so Vite can resolve the alias on Windows too.
+        replacement: fileURLToPath(new URL('./src/', import.meta.url)).replaceAll('\\', '/'),
       },
       {
         find: 'lodash',
