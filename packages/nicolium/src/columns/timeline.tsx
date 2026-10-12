@@ -4,7 +4,7 @@ import iconCaretDoubleUp from '@phosphor-icons/core/regular/caret-double-up.svg'
 import iconRepeat from '@phosphor-icons/core/regular/repeat.svg';
 import iconRocketLaunch from '@phosphor-icons/core/regular/rocket-launch.svg';
 import clsx from 'clsx';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { defineMessages, FormattedList, FormattedMessage, useIntl } from 'react-intl';
 
 import { AccountLink } from '@/components/accounts/account-link';
@@ -42,7 +42,6 @@ import {
 import { useSettings } from '@/stores/settings';
 import { useStatusMeta } from '@/stores/status-meta';
 import { useQueuedEntries, type TimelineEntry } from '@/stores/timelines';
-import { FOCUS_NEWEST_EVENT } from '@/utils/focus-newest';
 import { userTouching } from '@/utils/is-mobile';
 import { selectChild } from '@/utils/scroll-utils';
 import { hasActiveFilters, sortFilteredTimeline } from '@/utils/timeline-filter';
@@ -528,20 +527,6 @@ const Timeline: React.FC<ITimeline> = ({
     }
   };
 
-  const focusNewestRef = useRef(focusNewest);
-  focusNewestRef.current = focusNewest;
-
-  useEffect(() => {
-    const listener = (event: Event) => {
-      const feed = (event as CustomEvent<{ feed: Element }>).detail?.feed;
-      if (feed && document.getElementById(columnId)?.contains(feed)) {
-        focusNewestRef.current();
-      }
-    };
-    document.addEventListener(FOCUS_NEWEST_EVENT, listener);
-    return () => document.removeEventListener(FOCUS_NEWEST_EVENT, listener);
-  }, [columnId]);
-
   const handleSkipPinned = () => {
     const skipPinned = () => {
       selectChild(
@@ -688,6 +673,7 @@ const Timeline: React.FC<ITimeline> = ({
         onLoadMore={fetchNextPage}
         listRole='feed'
         listLabel={intl.formatMessage(messages.feed)}
+        onFocusNewest={focusNewest}
         {...props}
       >
         {renderedEntries}

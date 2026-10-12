@@ -9,7 +9,7 @@ import { useModalsActions } from '@/stores/modals';
 
 import { Hotkeys } from '../components/hotkeys';
 
-import { focusNewestInTimeline } from './focus-newest';
+import { focusNewestInList } from './focus-newest';
 
 // const keyMap = {
 //   help: '?',
@@ -159,7 +159,7 @@ const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
       help: handleHotkeyToggleHelp,
       search: handleHotkeySearch,
       back: handleHotkeyBack,
-      focusNewest: focusNewestInTimeline,
+      focusNewest: focusNewestInList,
     };
 
     if (account) {

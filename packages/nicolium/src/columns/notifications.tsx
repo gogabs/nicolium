@@ -32,7 +32,6 @@ import {
   useNotifications,
 } from '@/queries/notifications/use-notifications';
 import { useSettings, useSettingsStoreActions } from '@/stores/settings';
-import { FOCUS_NEWEST_EVENT } from '@/utils/focus-newest';
 import { userTouching } from '@/utils/is-mobile';
 import { selectChild } from '@/utils/scroll-utils';
 
@@ -326,20 +325,6 @@ const NotificationsColumn: React.FC<INotificationsColumn> = ({
     }
   };
 
-  const focusNewestRef = useRef(focusNewest);
-  focusNewestRef.current = focusNewest;
-
-  useEffect(() => {
-    const listener = (event: Event) => {
-      const feed = (event as CustomEvent<{ feed: Element }>).detail?.feed;
-      if (feed && document.getElementById(columnId)?.contains(feed)) {
-        focusNewestRef.current();
-      }
-    };
-    document.addEventListener(FOCUS_NEWEST_EVENT, listener);
-    return () => document.removeEventListener(FOCUS_NEWEST_EVENT, listener);
-  }, [columnId]);
-
   const handleRefresh = useCallback(() => {
     queryClient.resetQueries({
       queryKey: [
@@ -427,6 +412,7 @@ const NotificationsColumn: React.FC<INotificationsColumn> = ({
       listClassName={clsx('status-list', { 'status-list--loading': isLoading })}
       listRole='feed'
       listLabel={intl.formatMessage(messages.feed)}
+      onFocusNewest={focusNewest}
       useWindowScroll={!multiColumn}
     >
       {scrollableContent!}

@@ -2943,6 +2943,6 @@
   "status.a11y.visibility.direct": "direct message",
   "status.a11y.reblogged_by": "reposted by {name}",
   "timeline.feed": "Posts",
-  "keyboard_shortcuts.focus_newest": "to focus the most recent post or notification, showing new ones first",
+  "keyboard_shortcuts.focus_newest": "to focus the most recent item of the current list, showing new ones first",
   "notifications.feed": "Notifications"
 }

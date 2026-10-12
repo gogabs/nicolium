@@ -193,7 +193,7 @@ const HotkeysModal: React.FC<BaseModalProps> = ({ onClose }) => {
       label: (
         <FormattedMessage
           id='keyboard_shortcuts.focus_newest'
-          defaultMessage='to focus the most recent post or notification, showing new ones first'
+          defaultMessage='to focus the most recent item of the current list, showing new ones first'
         />
       ),
     },

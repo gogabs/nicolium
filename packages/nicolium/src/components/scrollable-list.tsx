@@ -1,6 +1,6 @@
 import { useLocation } from '@tanstack/react-router';
 import { debounce } from 'lodash-es';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import {
   Virtuoso,
@@ -15,6 +15,7 @@ import LoadMore from '@/components/load-more';
 import Spinner from '@/components/ui/spinner';
 import { useColumnScrollParent } from '@/contexts/multi-column-context';
 import { useSettings } from '@/stores/settings';
+import { FOCUS_LIST_ATTRIBUTE, focusListItem, useFocusNewest } from '@/utils/focus-newest';
 import { selectChild } from '@/utils/scroll-utils';
 
 import { EmptyMessage } from './empty-message';
@@ -25,6 +26,7 @@ type Context = {
   listClassName?: string;
   listRole?: string;
   listLabel?: string;
+  listId?: string;
   prepend?: React.ReactNode;
   footer?: React.ReactNode;
   empty?: React.ReactNode;
@@ -54,6 +56,7 @@ const List: Components<React.JSX.Element, Context>['List'] = React.forwardRef((p
       className={context?.listClassName}
       role={context?.listRole}
       aria-label={context?.listLabel}
+      {...{ [FOCUS_LIST_ATTRIBUTE]: context?.listId }}
       {...rest}
     />
   );
@@ -112,6 +115,11 @@ interface IScrollableList extends VirtuosoProps<any, any> {
   listRole?: string;
   /** Accessible name of the list element. */
   listLabel?: string;
+  /**
+   * Callback when the "focus newest" hotkey targets this list.
+   * By default, the first item gets focus.
+   */
+  onFocusNewest?: () => void;
   /** Class names on each item container. */
   itemClassName?: string;
   /** Extra class names on the LoadMore element */
@@ -143,6 +151,7 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
       listClassName,
       listRole,
       listLabel,
+      onFocusNewest,
       itemClassName,
       loadMoreClassName,
       hasMore,
@@ -159,6 +168,27 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
     const scrollParent = useColumnScrollParent() || params.customScrollParent;
     const node = useRef<VirtuosoHandle | null>(null);
     const [printing, setPrinting] = useState(false);
+    const listId = useId();
+
+    /**
+     * Focus the first item with something focusable in it (skipping eg. padding items),
+     * scrolling to the top when the first item isn't rendered.
+     */
+    const focusFirstItem = () => {
+      const items = () =>
+        Array.from(
+          document.querySelectorAll(`[${FOCUS_LIST_ATTRIBUTE}="${listId}"] [data-index]`),
+        ).toSorted(
+          (a, b) => Number(a.getAttribute('data-index')) - Number(b.getAttribute('data-index')),
+        );
+      const focusFirst = () => items().some((item) => focusListItem(item));
+
+      if (items()[0]?.getAttribute('data-index') !== '0' || !focusFirst()) {
+        node.current?.scrollIntoView({ index: 0, align: 'start', done: focusFirst });
+      }
+    };
+
+    useFocusNewest(listId, onFocusNewest ?? focusFirstItem);
 
     // Preserve scroll position
     const scrollDataKey = `nicolium:scrollData:${scrollKey}:${locationState.key}`;
@@ -309,8 +339,17 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
     };
 
     const context = useMemo<Context>(
-      () => ({ listClassName, listRole, listLabel, itemClassName, prepend, footer, empty }),
-      [listClassName, listRole, listLabel, itemClassName, prepend, footer, empty],
+      () => ({
+        listClassName,
+        listRole,
+        listLabel,
+        listId,
+        itemClassName,
+        prepend,
+        footer,
+        empty,
+      }),
+      [listClassName, listRole, listLabel, listId, itemClassName, prepend, footer, empty],
     );
 
     /** Figure out the initial index to scroll to. */
