@@ -27,11 +27,6 @@ const shouldHaveCard = (status: Pick<Status, 'content'>): boolean =>
 
 const messages = defineMessages({
   replyTo: { id: 'status.a11y.reply_to', defaultMessage: 'replying to {names}' },
-  threadContinuation: {
-    id: 'status.a11y.thread_continuation',
-    defaultMessage: 'continuing thread',
-  },
-  mentioning: { id: 'status.a11y.mentioning', defaultMessage: 'mentioning {names}' },
   contentWarning: { id: 'status.a11y.content_warning', defaultMessage: 'content warning: {text}' },
   image: { id: 'status.a11y.image', defaultMessage: 'image: {description}' },
   imageNoDescription: {
@@ -70,7 +65,6 @@ type LabelStatus = Pick<
   | 'created_at'
   | 'mentions'
   | 'in_reply_to_id'
-  | 'in_reply_to_account_id'
   | 'media_attachments'
   | 'poll_id'
   | 'visibility'
@@ -123,8 +117,8 @@ const attachmentLabel = (
 /**
  * Accessible name of a status, read by screen readers when the status gets focus.
  *
- * Order: author name and handle, reply context, content warning and text, attachments, poll,
- * quote, relative time, visibility (when not public), reposter.
+ * Order: author, reply context, content warning and text, attachments, poll, quote,
+ * relative time, full handle, visibility (when not public), reposter.
  */
 const textForScreenReader = (
   intl: IntlShape,
@@ -142,22 +136,14 @@ const textForScreenReader = (
   if (!account || typeof account !== 'object') return '';
 
   const omit = options.omit ?? {};
-  const values: string[] = omit.author ? [] : [displayNameFor(account), `@${account.acct}`];
+  const values: string[] = omit.author ? [] : [displayNameFor(account)];
 
-  if (status.in_reply_to_id && !omit.replyContext) {
-    // A reply to one's own status continues a thread rather than answering someone.
-    const isSelfReply = status.in_reply_to_account_id === account.id;
-    const mentions = isSelfReply
-      ? status.mentions.filter(({ id }) => id !== account.id)
-      : status.mentions;
-    const names = intl.formatList(mentions.map(({ acct }) => `@${acct.split('@')[0]}`));
-
-    if (isSelfReply) {
-      values.push(intl.formatMessage(messages.threadContinuation));
-      if (mentions.length > 0) values.push(intl.formatMessage(messages.mentioning, { names }));
-    } else if (mentions.length > 0) {
-      values.push(intl.formatMessage(messages.replyTo, { names }));
-    }
+  if (status.in_reply_to_id && status.mentions.length > 0 && !omit.replyContext) {
+    values.push(
+      intl.formatMessage(messages.replyTo, {
+        names: intl.formatList(status.mentions.map(({ acct }) => `@${acct.split('@')[0]}`)),
+      }),
+    );
   }
 
   const text = plainTextFor(status);
@@ -198,6 +184,7 @@ const textForScreenReader = (
   }
 
   if (!omit.time) values.push(relativeTime(intl, status.created_at));
+  if (!omit.author) values.push(`@${account.acct}`);
 
   if (
     status.visibility === 'unlisted' ||

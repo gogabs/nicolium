@@ -2930,8 +2930,6 @@
   "video.volume": "Volume",
   "who_to_follow.title": "People to follow",
   "status.a11y.reply_to": "replying to {names}",
-  "status.a11y.thread_continuation": "continuing thread",
-  "status.a11y.mentioning": "mentioning {names}",
   "status.a11y.content_warning": "content warning: {text}",
   "status.a11y.image": "image: {description}",
   "status.a11y.image_no_description": "image without description",
