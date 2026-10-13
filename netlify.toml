@@ -1,0 +1,12 @@
+[build]
+  command = "npx --yes pnpm@11.17.0 install --frozen-lockfile && npx --yes pnpm@11.17.0 -F pl-api build && npx --yes pnpm@11.17.0 -F nicolium build"
+  publish = "packages/nicolium/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Serve index.html for client-side routes; existing files are served first.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
