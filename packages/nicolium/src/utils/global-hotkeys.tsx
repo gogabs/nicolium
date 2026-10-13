@@ -9,7 +9,7 @@ import { useModalsActions } from '@/stores/modals';
 
 import { Hotkeys } from '../components/hotkeys';
 
-import { focusNewestInList } from './focus-newest';
+import { focusNewestInList, requestFocusNewestOnArrival } from './focus-newest';
 
 // const keyMap = {
 //   help: '?',
@@ -44,7 +44,8 @@ interface IGlobalHotkeys {
 
 const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
   const navigate = useNavigate();
-  const { history } = useRouter();
+  const router = useRouter();
+  const { history } = router;
   const { data: account } = useOwnAccount();
   const { openModal } = useModalsActions();
   const { resetCompose } = useComposeActions();
@@ -92,37 +93,49 @@ const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
       }
     };
 
+    /** Move focus to the start of the list on the page opened by a "go to" hotkey. */
+    const focusNewestOnArrival = () => {
+      requestFocusNewestOnArrival(router.state.location.state.key);
+    };
+
     const handleHotkeyToggleHelp = () => {
       openModal('HOTKEYS');
     };
 
     const handleHotkeyGoToHome = () => {
+      focusNewestOnArrival();
       navigate({ to: '/' });
     };
 
     const handleHotkeyGoToNotifications = () => {
+      focusNewestOnArrival();
       navigate({ to: '/notifications' });
     };
 
     const handleHotkeyGoToFavourites = () => {
       if (!account) return;
+      focusNewestOnArrival();
       navigate({ to: '/@{$username}/favorites', params: { username: account.acct } });
     };
 
     const handleHotkeyGoToProfile = () => {
       if (!account) return;
+      focusNewestOnArrival();
       navigate({ to: '/@{$username}', params: { username: account.acct } });
     };
 
     const handleHotkeyGoToBlocked = () => {
+      focusNewestOnArrival();
       navigate({ to: '/blocks' });
     };
 
     const handleHotkeyGoToMuted = () => {
+      focusNewestOnArrival();
       navigate({ to: '/mutes' });
     };
 
     const handleHotkeyGoToRequests = () => {
+      focusNewestOnArrival();
       navigate({ to: '/follow_requests' });
     };
 
