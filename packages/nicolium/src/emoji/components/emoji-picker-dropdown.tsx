@@ -1,14 +1,15 @@
 import React, { useEffect, useLayoutEffect, useMemo, useState, Suspense } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
-import { changeSetting, saveSettings } from '@/actions/settings';
+import { saveSettings } from '@/actions/settings';
 import { useTheme } from '@/hooks/use-theme';
 import { useCustomEmojis } from '@/queries/instance/use-custom-emojis';
-import { useSettings, useSettingsStoreActions } from '@/stores/settings';
+import { useSettingsStoreActions } from '@/stores/settings';
 
 import { buildCustomEmojiCategories } from '..';
 import { EmojiPicker } from '../../components/async-components';
 
+import type { PickedEmoji } from './emoji-picker';
 import type { Emoji, CustomEmoji, NativeEmoji } from '@/emoji';
 import type { CustomEmoji as BaseCustomEmoji } from 'pl-api';
 
@@ -47,42 +48,6 @@ interface IEmojiPickerDropdown {
   setVisible: (value: boolean) => void;
   update: (() => any) | null;
 }
-
-const perLine = 8;
-const lines = 2;
-
-const DEFAULTS = [
-  '+1',
-  'grinning',
-  'kissing_heart',
-  'heart_eyes',
-  'laughing',
-  'stuck_out_tongue_winking_eye',
-  'sweat_smile',
-  'joy',
-  'yum',
-  'disappointed',
-  'thinking_face',
-  'weary',
-  'sob',
-  'sunglasses',
-  'heart',
-  'ok_hand',
-];
-
-const getFrequentlyUsedEmojis = (emojiCounters: Record<string, number>) => {
-  let emojis = Object.keys(emojiCounters)
-    .toSorted((a, b) => emojiCounters[a] - emojiCounters[b])
-    .toReversed()
-    .slice(0, perLine * lines);
-
-  if (emojis.length < DEFAULTS.length) {
-    const uniqueDefaults = DEFAULTS.filter((emoji) => !emojis.includes(emoji));
-    emojis = emojis.concat(uniqueDefaults.slice(0, DEFAULTS.length - emojis.length));
-  }
-
-  return emojis;
-};
 
 const getCustomEmojis = (emojis: Array<BaseCustomEmoji>) =>
   emojis
@@ -133,13 +98,7 @@ const EmojiPickerDropdown: React.FC<IEmojiPickerDropdown> = ({
 
   const { data: customEmojis } = useCustomEmojis(getCustomEmojis);
 
-  const settings = useSettings();
-  const frequentlyUsedEmojis = useMemo(
-    () => getFrequentlyUsedEmojis(settings.frequentlyUsedEmojis),
-    [settings.frequentlyUsedEmojis],
-  );
-
-  const handlePick = (emoji: any) => {
+  const handlePick = (emoji: PickedEmoji) => {
     setVisible(false);
 
     let pickedEmoji: Emoji;
@@ -167,10 +126,6 @@ const EmojiPickerDropdown: React.FC<IEmojiPickerDropdown> = ({
     if (onPickEmoji) {
       onPickEmoji(pickedEmoji);
     }
-  };
-
-  const handleSkinTone = (skinTone: string) => {
-    changeSetting(['skinTone'], skinTone);
   };
 
   const getI18n = () => ({
@@ -230,16 +185,12 @@ const EmojiPickerDropdown: React.FC<IEmojiPickerDropdown> = ({
           custom={customEmojiCategories}
           title={title}
           onEmojiSelect={handlePick}
-          recent={frequentlyUsedEmojis}
+          onClose={() => setVisible(false)}
           perLine={8}
-          skin={handleSkinTone}
           emojiSize={22}
           emojiButtonSize={34}
-          set='twitter'
           theme={theme === 'light' ? 'light' : 'dark'}
           i18n={getI18n()}
-          skinTonePosition='search'
-          previewPosition='none'
         />
       </Suspense>
     </RenderAfter>

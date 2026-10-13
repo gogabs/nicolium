@@ -1,6 +1,6 @@
 import { useFloating, shift, flip, autoUpdate } from '@floating-ui/react';
 import iconSmiley from '@phosphor-icons/core/regular/smiley.svg';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import IconButton from '@/components/ui/icon-button';
@@ -53,6 +53,24 @@ const EmojiPickerDropdownContainer: React.FC<IEmojiPickerDropdownContainer> = ({
     setIsOpen(false);
   });
 
+  // When the picker closes with focus inside it (after picking an emoji or
+  // pressing Escape), return focus to the button that opened it.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !isOpen) {
+      const { activeElement } = document;
+      if (
+        !activeElement ||
+        activeElement === document.body ||
+        refs.floating.current?.contains(activeElement)
+      ) {
+        refs.domReference.current?.focus();
+      }
+    }
+
+    wasOpen.current = isOpen;
+  }, [isOpen]);
+
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -74,9 +92,11 @@ const EmojiPickerDropdownContainer: React.FC<IEmojiPickerDropdownContainer> = ({
             onClick: handleClick,
             onKeyDown: handleKeyDown,
             ref: refs.setReference,
+            'aria-haspopup': 'dialog',
+            'aria-expanded': isOpen,
           })
         : null,
-    [children],
+    [children, isOpen],
   );
 
   return (
@@ -88,6 +108,7 @@ const EmojiPickerDropdownContainer: React.FC<IEmojiPickerDropdownContainer> = ({
           src={iconSmiley}
           title={title}
           aria-label={title}
+          aria-haspopup='dialog'
           aria-expanded={isOpen}
           role='button'
           onClick={handleClick}

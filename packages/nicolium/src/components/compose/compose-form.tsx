@@ -251,7 +251,7 @@ const ComposeForm = <ID extends string>({
       // FIXME: Make this less brittle
       getClickableArea(),
       document.getElementById('privacy-dropdown'),
-      document.querySelector('em-emoji-picker'),
+      document.querySelector('.emoji-picker'),
       document.getElementById('modal-overlay'),
     ].some((element) => element?.contains(e.target as Node));
 

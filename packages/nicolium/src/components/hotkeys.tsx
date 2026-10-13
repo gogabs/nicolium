@@ -275,9 +275,9 @@ function useHotkeys<T extends HTMLElement>(handlers: HandlerMap) {
       const shouldHandleEvent =
         isKeyboardEvent(event) &&
         !event.defaultPrevented &&
-        !['input', 'textarea', 'select', 'em-emoji-picker'].includes(tagName) &&
+        !['input', 'textarea', 'select'].includes(tagName) &&
         !(event.target as HTMLElement).closest(
-          '[contenteditable], .multiselect-container, .dropdown-menu__content',
+          '[contenteditable], .multiselect-container, .dropdown-menu__content, .emoji-picker',
         ) &&
         !(
           (event.target as HTMLElement)?.closest('.drive-file') &&

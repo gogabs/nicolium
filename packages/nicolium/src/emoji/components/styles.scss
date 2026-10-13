@@ -307,6 +307,9 @@ a {
   z-index: 1;
   top: -1px;
 
+  margin: 0;
+
+  font-size: inherit;
   font-weight: 500;
 
   background-color: rgb(var(--em-rgb-background), .9);
@@ -405,6 +408,10 @@ button {
 
   appearance: none;
   background-color: transparent;
+
+  &:focus-visible {
+    outline: 2px solid rgb(var(--em-rgb-accent));
+  }
 }
 
 #nav {
@@ -445,8 +452,13 @@ button {
     transition: transform var(--duration) var(--easing);
   }
 
-  button[aria-selected] {
+  button[aria-current] {
     color: rgb(var(--em-rgb-accent));
+  }
+
+  button:focus-visible {
+    border-radius: 6px;
+    outline: 2px solid rgb(var(--em-rgb-accent));
   }
 }
 
@@ -522,11 +534,18 @@ button {
       transition-duration: var(--duration-instant);
     }
 
-    &[aria-selected] .background {
+    &:hover .background,
+    &:focus-visible .background {
       opacity: 1
     }
 
-    &[data-keyboard] .background {
+    &:focus-visible {
+      border-radius: 100%;
+      outline: 2px solid rgb(var(--em-rgb-accent));
+      outline-offset: -2px;
+    }
+
+    &:focus-visible .background {
       transition: none
     }
   }
@@ -556,7 +575,7 @@ button {
     transition: transform var(--duration) var(--easing)
   }
 
-  &[aria-selected] {
+  &[aria-expanded="true"] {
     border-top-color: rgb(0,0,0, .05);
     border-right-width: 0;
     border-bottom-color: transparent;
