@@ -7,6 +7,7 @@ import PullToRefresh from '@/components/pull-to-refresh';
 import Spinner from '@/components/ui/spinner';
 import { useChats } from '@/queries/chats';
 import { useShoutboxIsLoading } from '@/stores/shoutbox';
+import { FOCUS_LIST_ATTRIBUTE, focusListEdge, useFocusNewest } from '@/utils/focus-newest';
 import { selectChild } from '@/utils/scroll-utils';
 
 import ChatListItem from './chat-list-item';
@@ -22,6 +23,8 @@ interface IChatList {
 const ChatList: React.FC<IChatList> = ({ onClickChat, useWindowScroll = false }) => {
   const listId: string = useRef(`chat-list-${crypto.randomUUID()}`).current;
   const node = useRef<VirtuosoHandle | null>(null);
+
+  useFocusNewest(listId, () => focusListEdge(listId, node, 'first'));
 
   const showShoutbox = !useShoutboxIsLoading();
 
@@ -107,6 +110,7 @@ const ChatList: React.FC<IChatList> = ({ onClickChat, useWindowScroll = false })
     >
       <Virtuoso
         id={listId}
+        {...{ [FOCUS_LIST_ATTRIBUTE]: listId }}
         ref={node}
         atTopStateChange={(atTop) => {
           setNearTop(atTop);

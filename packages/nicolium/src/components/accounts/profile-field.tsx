@@ -49,19 +49,27 @@ interface IProfileField {
 const ProfileField: React.FC<IProfileField> = ({ accountId, field, emojis }) => {
   const intl = useIntl();
 
+  // Fields are rendered as name–value groups of the profile's description list.
+  const specialField = (content: React.ReactNode) => (
+    <div className='profile-field'>
+      <dt className='sr-only'>{field.name}</dt>
+      <dd>{content}</dd>
+    </div>
+  );
+
   if (isTicker(field.name)) {
-    return (
+    return specialField(
       <CryptoAddress
         ticker={getTicker(field.name).toLowerCase()}
         address={unescapeHTML(field.value)}
-      />
+      />,
     );
   } else if (isZapEmoji(field.name) && field.value.includes('@')) {
-    return <LightningAddress address={unescapeHTML(field.value)} />;
+    return specialField(<LightningAddress address={unescapeHTML(field.value)} />);
   }
 
   return (
-    <dl className={clsx('profile-field', { 'profile-field--verified': field.verified_at })}>
+    <div className={clsx('profile-field', { 'profile-field--verified': field.verified_at })}>
       <dt title={field.name}>
         <span data-markup>
           <Emojify text={field.name} emojis={emojis} />
@@ -88,7 +96,7 @@ const ProfileField: React.FC<IProfileField> = ({ accountId, field, emojis }) => 
 
         {isTimezoneLabel(field.name) && <AccountLocalTime accountId={accountId} field={field} />}
       </dd>
-    </dl>
+    </div>
   );
 };
 

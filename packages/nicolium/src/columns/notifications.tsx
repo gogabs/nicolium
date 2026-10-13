@@ -42,6 +42,7 @@ import type { VirtuosoHandle } from 'react-virtuoso';
 
 const messages = defineMessages({
   title: { id: 'column.notifications', defaultMessage: 'Notifications' },
+  feed: { id: 'notifications.feed', defaultMessage: 'Notifications' },
   queue: {
     id: 'notifications.queue_label',
     defaultMessage:
@@ -199,6 +200,7 @@ const NotificationsColumn: React.FC<INotificationsColumn> = ({
   conditionalPullToRefresh,
   disableAutoMarkRead,
 }) => {
+  const intl = useIntl();
   const columnId: string = useRef(`notifications-${crypto.randomUUID()}`).current;
 
   const features = useFeatures();
@@ -310,6 +312,19 @@ const NotificationsColumn: React.FC<INotificationsColumn> = ({
     markNotificationsRead(notifications[0]?.most_recent_notification_id);
   }, [notifications, markNotificationsRead, settings.notifications.autoMarkRead]);
 
+  /** Focus the most recent notification, showing queued notifications first. */
+  const focusNewest = () => {
+    const focus = () =>
+      selectChild(0, node, document.getElementById(columnId) ?? undefined, undefined, 'start');
+
+    if (queuedNotificationCount > 0) {
+      handleDequeueNotifications();
+      setTimeout(focus, 100);
+    } else {
+      focus();
+    }
+  };
+
   const handleRefresh = useCallback(() => {
     queryClient.resetQueries({
       queryKey: [
@@ -364,13 +379,15 @@ const NotificationsColumn: React.FC<INotificationsColumn> = ({
   if (isLoading && scrollableContentRef.current) {
     scrollableContent = scrollableContentRef.current;
   } else if (displayedNotifications.length > 0 || hasMore) {
-    scrollableContent = displayedNotifications.map((item) => (
+    scrollableContent = displayedNotifications.map((item, index) => (
       <Notification
         key={item.group_key}
         notification={item}
         onMoveUp={handleMoveUp}
         onMoveDown={handleMoveDown}
         compact={compact}
+        posInSet={index + 1}
+        setSize={hasMore ? -1 : displayedNotifications.length}
       />
     ));
   } else {
@@ -393,6 +410,9 @@ const NotificationsColumn: React.FC<INotificationsColumn> = ({
       onLoadMore={handleLoadOlder}
       onScrollToTop={handleScrollToTop}
       listClassName={clsx('status-list', { 'status-list--loading': isLoading })}
+      listRole='feed'
+      listLabel={intl.formatMessage(messages.feed)}
+      onFocusNewest={focusNewest}
       useWindowScroll={!multiColumn}
     >
       {scrollableContent!}

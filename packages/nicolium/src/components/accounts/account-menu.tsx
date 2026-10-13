@@ -56,6 +56,7 @@ import copy from '@/utils/copy';
 import type { Account } from 'pl-api';
 
 const messages = defineMessages({
+  menu: { id: 'account.menu', defaultMessage: 'More actions for @{name}' },
   editProfile: { id: 'account.edit_profile', defaultMessage: 'Edit profile' },
   mention: { id: 'account.mention', defaultMessage: 'Mention' },
   direct: { id: 'account.direct', defaultMessage: 'Direct message @{name}' },
@@ -812,7 +813,12 @@ const AccountMenu: React.FC<IAccountMenu> = ({ account }) => {
 
   return (
     <DropdownMenu items={menu} placement='bottom-end'>
-      <IconButton src={iconDotsThree} theme='outlined' className='account-menu__button' />
+      <IconButton
+        src={iconDotsThree}
+        theme='outlined'
+        className='account-menu__button'
+        title={intl.formatMessage(messages.menu, { name: account.acct })}
+      />
     </DropdownMenu>
   );
 };

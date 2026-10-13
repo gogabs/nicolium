@@ -8,6 +8,16 @@
   # pulls a git-hosted package that fails to build on Netlify.
   PNPM_FLAGS = "--filter nicolium..."
 
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0"
+
+[[headers]]
+  for = "/packs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # Serve index.html for client-side routes; existing files are served first.
 [[redirects]]
   from = "/*"

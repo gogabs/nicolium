@@ -188,6 +188,15 @@ const HotkeysModal: React.FC<BaseModalProps> = ({ onClose }) => {
         <FormattedMessage id='keyboard_shortcuts.down' defaultMessage='to move down in the list' />
       ),
     },
+    {
+      key: <HotkeyBinding keys={['.']} />,
+      label: (
+        <FormattedMessage
+          id='keyboard_shortcuts.focus_newest'
+          defaultMessage='to focus the most recent item of the current list, showing new ones first'
+        />
+      ),
+    },
     isLoggedIn && {
       key: <HotkeyBinding keys={['n']} />,
       label: (

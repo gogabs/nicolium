@@ -9,6 +9,8 @@ import { useModalsActions } from '@/stores/modals';
 
 import { Hotkeys } from '../components/hotkeys';
 
+import { focusNewestInList } from './focus-newest';
+
 // const keyMap = {
 //   help: '?',
 //   search: ['/', 's'],
@@ -157,6 +159,7 @@ const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
       help: handleHotkeyToggleHelp,
       search: handleHotkeySearch,
       back: handleHotkeyBack,
+      focusNewest: focusNewestInList,
     };
 
     if (account) {

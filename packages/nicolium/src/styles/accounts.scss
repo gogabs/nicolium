@@ -193,6 +193,16 @@
   flex-direction: column;
   gap: 0.5rem;
 
+  // Stats come after the bio in the DOM, so screen readers get name, bio and fields first,
+  // but are displayed right below the name.
+  > .account-info-panel__name {
+    order: -2;
+  }
+
+  > .account-stats {
+    order: -1;
+  }
+
   &__container {
     z-index: 1;
     flex: 1;
@@ -220,7 +230,8 @@
       align-items: center;
       @include mixins.text($size: lg, $weight: bold);
 
-      p {
+      p,
+      .account-info-panel__name__text {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -330,12 +341,6 @@
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 1rem;
-
-    &--optional {
-      @media (min-width: variables.$breakpoint-xl) {
-        display: none;
-      }
-    }
   }
 }
 
@@ -827,21 +832,6 @@
 
   strong {
     color: var(--color-green-500);
-  }
-}
-
-.profile-fields-panel {
-  .widget__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  span[data-markup] {
-    @include mixins.text;
-
-    overflow: hidden;
-    overflow-wrap: anywhere;
   }
 }
 

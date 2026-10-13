@@ -60,7 +60,6 @@ import type { FilterContextType } from '@/queries/settings/use-filters';
 const messages = defineMessages({
   applicationName: { id: 'status.application_name', defaultMessage: 'Sent from {name}' },
   edited: { id: 'status.edited', defaultMessage: 'Edited {date}' },
-  rebloggedBy: { id: 'status.reblogged_by', defaultMessage: '{name} reposted' },
 });
 
 interface IAccountInfo {
@@ -272,6 +271,12 @@ interface IStatus {
   columnId?: string;
   detailed?: boolean;
   withMedia?: boolean;
+  /** IDs of accounts which reposted the status, when reposts are grouped by the timeline. */
+  rebloggedBy?: Array<string>;
+  /** Position of the status in the list it is rendered in, starting at 1. */
+  posInSet?: number;
+  /** Number of items in the list the status is rendered in, or -1 when unknown. */
+  setSize?: number;
 }
 
 const Status: React.FC<IStatus> = React.memo((props) => {
@@ -296,6 +301,8 @@ const Status: React.FC<IStatus> = React.memo((props) => {
     expandable = true,
     detailed = false,
     withMedia = true,
+    posInSet,
+    setSize,
   } = props;
 
   const intl = useIntl();
@@ -683,10 +690,11 @@ const Status: React.FC<IStatus> = React.memo((props) => {
     );
   }
 
-  let rebloggedByText;
-  if (isReblog) {
-    rebloggedByText = intl.formatMessage(messages.rebloggedBy, { name: status.account.acct });
-  }
+  const accessibleLabel = textForScreenReader(intl, actualStatus, {
+    rebloggedBy: isReblog ? [status.account] : props.rebloggedBy,
+    spoilerExpanded,
+    scopeUrl,
+  });
 
   const body = (
     <div
@@ -697,9 +705,8 @@ const Status: React.FC<IStatus> = React.memo((props) => {
       data-featured={featured ? 'true' : null}
       data-visibility={actualStatus.visibility}
       data-id={status.id}
-      aria-label={textForScreenReader(intl, actualStatus, rebloggedByText, scopeUrl)}
       ref={node}
-      {...(detailed ? {} : { onClick: handleClick, role: 'link' })}
+      {...(detailed ? {} : { onClick: handleClick })}
     >
       <Card
         variant={variant}
@@ -816,6 +823,9 @@ const Status: React.FC<IStatus> = React.memo((props) => {
       handlers={handlers}
       focusable={focusable}
       element='article'
+      aria-label={accessibleLabel}
+      aria-posinset={posInSet}
+      aria-setsize={setSize}
       lang={actualStatus.language || undefined}
       data-testid='status'
       data-status-id={status.id}

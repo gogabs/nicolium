@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 
 import { AccountLink } from '@/components/accounts/account-link';
@@ -11,6 +11,7 @@ import { useCurrentAccount } from '@/contexts/current-account-context';
 import Emojify from '@/emoji/emojify';
 import { useAccount } from '@/queries/accounts/use-account';
 import { useShoutboxIsLoading, useShoutboxMessages, type ShoutMessage } from '@/stores/shoutbox';
+import { FOCUS_LIST_ATTRIBUTE, focusListEdge, useFocusNewest } from '@/utils/focus-newest';
 
 import { ChatMessageListList, ChatMessageListScroller } from './chat-message-list';
 
@@ -77,6 +78,9 @@ const ShoutboxMessage: React.FC<IShoutboxMessage> = ({ message, isMyMessage }) =
 /** Scrollable list of shoutbox messages. */
 const ShoutboxMessageList: React.FC = () => {
   const node = useRef<VirtuosoHandle | null>(null);
+  const listId = useId();
+
+  useFocusNewest(listId, () => focusListEdge(listId, node, 'last', '.shoutbox-message__bubble'));
   const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX - 20);
 
   const me = useCurrentAccount();
@@ -124,6 +128,7 @@ const ShoutboxMessageList: React.FC = () => {
       <div className='chat-message-list'>
         <Virtuoso
           ref={node}
+          {...{ [FOCUS_LIST_ATTRIBUTE]: listId }}
           alignToBottom
           {...initialScrollPositionProps}
           data={shoutboxMessages}

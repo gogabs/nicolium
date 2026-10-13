@@ -42,6 +42,7 @@ import { useLoggedIn } from '@/hooks/use-logged-in';
 import { useReblog } from '@/hooks/use-reblog';
 import { useScopeUrl } from '@/hooks/use-scope-url';
 import { useNotification } from '@/queries/notifications/use-notifications';
+import { useStatus } from '@/queries/statuses/use-status';
 import {
   useFavouriteStatus,
   useUnfavouriteStatus,
@@ -50,6 +51,7 @@ import { useComposeActions } from '@/stores/compose';
 import { useInstance } from '@/stores/instance';
 import { useSettings } from '@/stores/settings';
 import { useStatusMeta, useStatusMetaActions } from '@/stores/status-meta';
+import { relativeTime, textForScreenReader } from '@/utils/status';
 
 import { AccountLink } from '../accounts/account-link';
 
@@ -286,6 +288,10 @@ interface INotification {
   onMoveUp?: (notificationId: string) => void;
   onMoveDown?: (notificationId: string) => void;
   compact?: boolean;
+  /** Position of the notification in the list, starting at 1. */
+  posInSet?: number;
+  /** Number of notifications in the list, or -1 when unknown. */
+  setSize?: number;
 }
 
 const STATUS_NOTIFICATION_TYPES: readonly NotificationType[] = [
@@ -312,7 +318,14 @@ const getNotificationStatusId = (notification: NotificationGroup): string | null
   return null;
 };
 
-const Notification: React.FC<INotification> = ({ onMoveUp, onMoveDown, compact, ...props }) => {
+const Notification: React.FC<INotification> = ({
+  onMoveUp,
+  onMoveDown,
+  compact,
+  posInSet,
+  setSize,
+  ...props
+}) => {
   const { mentionCompose, replyCompose } = useComposeActions();
 
   const columnId = useColumnId();
@@ -320,6 +333,7 @@ const Notification: React.FC<INotification> = ({ onMoveUp, onMoveDown, compact, 
 
   const notification = useNotification(props.notification);
   const status = notification.status;
+  const { data: rebloggedStatus } = useStatus(status?.reblog_id ?? undefined);
 
   const { me } = useLoggedIn();
   const { spoilerExpanded } = useStatusMeta(status?.id || '');
@@ -586,6 +600,41 @@ const Notification: React.FC<INotification> = ({ onMoveUp, onMoveDown, compact, 
     notification.latest_page_notification_at!,
   );
 
+  /**
+   * Read the notification with the post it refers to, so likes, reposts and the like
+   * say which post they are about. The author is left out when it is the user or the
+   * account named in the notification, and the post time is replaced by the notification time.
+   */
+  const labelStatus = rebloggedStatus ?? status;
+  const accessibleLabel = [
+    intl.formatMessage(messages[displayedType], {
+      name: notification.accounts.length
+        ? intl.formatList(
+            notification.accounts.map((account) => account.acct),
+            { type: 'conjunction' },
+          )
+        : '',
+      targetName,
+      isReblog: status?.reblog_id ? 1 : 0,
+    }),
+    labelStatus?.account
+      ? textForScreenReader(intl, labelStatus, {
+          spoilerExpanded,
+          scopeUrl,
+          omit: {
+            author:
+              labelStatus.account.id === me ||
+              notification.accounts.some((account) => account.id === labelStatus.account.id),
+            replyContext: displayedType === 'reply',
+            time: true,
+          },
+        })
+      : '',
+    relativeTime(intl, notification.latest_page_notification_at!),
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   const statusInfo = (
     <StatusInfo
       avatarSize={compact ? 0 : avatarSize}
@@ -598,8 +647,16 @@ const Notification: React.FC<INotification> = ({ onMoveUp, onMoveDown, compact, 
   const timestamp = <RelativeTimestamp timestamp={notification.latest_page_notification_at!} />;
 
   return (
-    <Hotkeys handlers={handlers} data-testid='notification'>
-      <div className='notification' tabIndex={0} aria-label={ariaLabel} ref={node}>
+    <Hotkeys
+      handlers={handlers}
+      element='article'
+      tabIndex={0}
+      aria-label={accessibleLabel}
+      aria-posinset={posInSet}
+      aria-setsize={setSize}
+      data-testid='notification'
+    >
+      <div className='notification' ref={node}>
         {compact || !['mention', 'status'].includes(notification.type) ? (
           <div className='notification__header'>
             <div className='notification__info'>{statusInfo}</div>
