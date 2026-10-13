@@ -341,12 +341,6 @@
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 1rem;
-
-    &--optional {
-      @media (min-width: variables.$breakpoint-xl) {
-        display: none;
-      }
-    }
   }
 }
 
@@ -838,21 +832,6 @@
 
   strong {
     color: var(--color-green-500);
-  }
-}
-
-.profile-fields-panel {
-  .widget__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  span[data-markup] {
-    @include mixins.text;
-
-    overflow: hidden;
-    overflow-wrap: anywhere;
   }
 }
 

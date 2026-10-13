@@ -70,8 +70,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({
   const acct = useAcct(account);
   const me = useCurrentAccount();
   const ownAccount = account?.id === me;
-  const { displayMentionAvatars, sidebarItems } = useSettings();
-  const isContextDisplayed = sidebarItems.includes('context');
+  const { displayMentionAvatars } = useSettings();
 
   const { data: scrobble } = useAccountScrobbleQuery(account?.id);
 
@@ -253,11 +252,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({
             )}
 
             {account.fields.length > 0 && (
-              <div
-                className={clsx('account-info__fields', {
-                  'account-info__fields--optional': isContextDisplayed,
-                })}
-              >
+              <dl className='account-info__fields'>
                 {account.fields.map((field, i) => (
                   <ProfileField
                     field={field}
@@ -266,7 +261,7 @@ const ProfileInfoPanel: React.FC<IProfileInfoPanel> = ({
                     accountId={account.id}
                   />
                 ))}
-              </div>
+              </dl>
             )}
 
             <div className='account-info__details'>
