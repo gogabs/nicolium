@@ -1,9 +1,12 @@
 [build]
-  command = "npx --yes pnpm@11.17.0 install --frozen-lockfile && npx --yes pnpm@11.17.0 -F pl-api build && npx --yes pnpm@11.17.0 -F nicolium build"
+  command = "npx --yes pnpm@11.17.0 -F pl-api build && npx --yes pnpm@11.17.0 -F nicolium build"
   publish = "packages/nicolium/dist"
 
 [build.environment]
   NODE_VERSION = "22"
+  # Only install the web client and its workspace deps; the Expo app (micolium)
+  # pulls a git-hosted package that fails to build on Netlify.
+  PNPM_FLAGS = "--filter nicolium..."
 
 # Serve index.html for client-side routes; existing files are served first.
 [[redirects]]
