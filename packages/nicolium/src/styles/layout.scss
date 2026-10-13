@@ -1269,7 +1269,7 @@ body {
     align-items: center;
     justify-content: space-between;
 
-    h1 {
+    h2 {
       @include mixins.text($size: xl, $weight: bold);
     }
   }

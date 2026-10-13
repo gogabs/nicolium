@@ -41,7 +41,7 @@ const Widget: React.FC<IWidget> = ({
     <div className={clsx('widget', className)} aria-labelledby={`widget-header-${widgetId}`}>
       {(title ?? action ?? ('onActionClick' in props || 'to' in props)) && (
         <div className='widget__header'>
-          {title && <h1 id={`widget-header-${widgetId}`}>{title}</h1>}
+          {title && <h2 id={`widget-header-${widgetId}`}>{title}</h2>}
           {action ??
             ('onActionClick' in props ? (
               <IconButton

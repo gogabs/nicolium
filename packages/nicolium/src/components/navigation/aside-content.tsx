@@ -32,7 +32,6 @@ const NewEventPanel = lazy(() => import('@/components/panels/new-event-panel'));
 const NewGroupPanel = lazy(() => import('@/components/panels/new-group-panel'));
 const NotificationsPanel = lazy(() => import('@/components/panels/notifications-panel'));
 const PinnedAccountsPanel = lazy(() => import('@/components/panels/pinned-accounts-panel'));
-const ProfileFieldsPanel = lazy(() => import('@/components/panels/profile-fields-panel'));
 const ProfileMediaPanel = lazy(() => import('@/components/panels/profile-media-panel'));
 const PromoPanel = lazy(() => import('@/components/panels/promo-panel'));
 const ShoutboxPanel = lazy(() => import('@/components/panels/shoutbox-panel'));
@@ -117,9 +116,6 @@ const AsideContent: React.FC<IAsideContent> = ({
                 items.push(<AccountNotePanel key='account-note' account={account} />);
               }
               items.push(<ProfileMediaPanel key='profile-media' account={account} />);
-              if (account && account.fields?.length) {
-                items.push(<ProfileFieldsPanel key='profile-fields' account={account} />);
-              }
               break;
             case 'remote-instance':
               if ((disclosed || ownAccount?.is_admin) && instance) {

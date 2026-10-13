@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useId } from 'react';
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 import { type Components, Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 
@@ -12,6 +12,7 @@ import {
   useMarkChatAsRead,
   type ChatMessage as ChatMessageEntity,
 } from '@/queries/chats';
+import { FOCUS_LIST_ATTRIBUTE, focusListEdge, useFocusNewest } from '@/utils/focus-newest';
 
 import ChatMessage from './chat-message';
 
@@ -74,6 +75,9 @@ const ChatMessageList: React.FC<IChatMessageList> = React.memo(({ chat }) => {
   const intl = useIntl();
 
   const node = useRef<VirtuosoHandle | null>(null);
+  const listId = useId();
+
+  useFocusNewest(listId, () => focusListEdge(listId, node, 'last', '.chat-message__bubble'));
   const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX - 20);
 
   const markChatAsRead = useMarkChatAsRead(chat.id);
@@ -265,6 +269,7 @@ const ChatMessageList: React.FC<IChatMessageList> = React.memo(({ chat }) => {
       <div className='chat-message-list'>
         <Virtuoso
           ref={node}
+          {...{ [FOCUS_LIST_ATTRIBUTE]: listId }}
           alignToBottom
           {...initialScrollPositionProps}
           data={cachedChatMessages}

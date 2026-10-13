@@ -429,6 +429,9 @@ const Account = ({
               loading && 'placeholder-avatar',
             )}
             {...linkProps}
+            // The display name next to it links to the same place
+            aria-hidden
+            tabIndex={withLinkToProfile ? -1 : undefined}
           >
             <Avatar
               src={systemMember?.emoji_url || account.avatar}
