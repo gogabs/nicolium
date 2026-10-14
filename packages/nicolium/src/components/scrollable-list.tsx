@@ -1,4 +1,4 @@
-import { useLocation } from '@tanstack/react-router';
+import { useLocation, useMatch } from '@tanstack/react-router';
 import { debounce } from 'lodash-es';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -172,6 +172,7 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
   ) => {
     const { autoloadMore } = useSettings();
     const { state: locationState } = useLocation();
+    const pathname = useMatch({ strict: false, select: (match) => match.pathname });
     const scrollParent = useColumnScrollParent() || params.customScrollParent;
     const node = useRef<VirtuosoHandle | null>(null);
     const [printing, setPrinting] = useState(false);
@@ -202,6 +203,7 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
     useFocusNewest(listId, onFocusNewest ?? focusFirstItem);
     useFocusNewestOnArrival(
       listId,
+      pathname,
       locationState.key,
       !showLoading,
       onFocusNewest ?? focusFirstItem,

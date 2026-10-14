@@ -46,13 +46,16 @@ const focusNewestInList = (): boolean => {
   return true;
 };
 
-/** Focus an item of a list: its `.focusable` element, or the first focusable element in it. */
+/**
+ * Focus an item of a list: its `.focusable` element, or the first focusable element in it.
+ * Returns whether it got focus, which fails eg. while Virtuoso keeps the list hidden.
+ */
 const focusListItem = (item: Element | null | undefined, selector = '.focusable'): boolean => {
   const element =
     item?.querySelector<HTMLElement>(selector) ??
     item?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
   element?.focus({ preventScroll: false });
-  return !!element;
+  return !!element && document.activeElement === element;
 };
 
 /**
@@ -94,24 +97,30 @@ const useFocusNewest = (listId: string, handler: () => void) => {
 /** Event telling lists that a "focus newest on arrival" request was made. */
 const FOCUS_ON_ARRIVAL_EVENT = 'nicolium:focus-on-arrival';
 
+/** Strip the trailing slash index routes have in their match pathname. */
+const normalizePathname = (pathname = '') => pathname.replace(/(.)\/+$/u, '$1');
+
 /** Pending request to focus the newest entry of the main list of the page being navigated to. */
-let arrivalRequest: { fromKey: string | undefined; expires: number } | null = null;
+let arrivalRequest: { pathname: string; fromKey: string | undefined; expires: number } | null =
+  null;
 
 /**
- * Ask the main list of the next page to focus its newest entry once it has loaded.
+ * Ask the main list of the page at `pathname` to focus its newest entry once it has loaded.
  * Call before navigating, with the key of the location being left.
  */
-const requestFocusNewestOnArrival = (fromKey: string | undefined) => {
-  arrivalRequest = { fromKey, expires: Date.now() + 5_000 };
+const requestFocusNewestOnArrival = (pathname: string, fromKey: string | undefined) => {
+  arrivalRequest = { pathname, fromKey, expires: Date.now() + 5_000 };
   document.dispatchEvent(new Event(FOCUS_ON_ARRIVAL_EVENT));
 };
 
 /**
  * Call `handler` when a "focus newest on arrival" request targets the list marked with `listId`,
- * which is shown at the location with key `locationKey`, once `ready` is true.
+ * which belongs to the page at `pathname` shown at the location with key `locationKey`,
+ * once `ready` is true.
  */
 const useFocusNewestOnArrival = (
   listId: string,
+  pathname: string | undefined,
   locationKey: string | undefined,
   ready: boolean,
   handler: () => void,
@@ -132,23 +141,31 @@ const useFocusNewestOnArrival = (
       arrivalRequest = null;
       return;
     }
-    if (arrivalRequest.fromKey === locationKey) return;
+    // The page being left keeps rendering for a moment with the new location,
+    // so match on the page the list belongs to rather than on the location.
+    if (
+      normalizePathname(arrivalRequest.pathname) !== normalizePathname(pathname) ||
+      arrivalRequest.fromKey === locationKey
+    ) {
+      return;
+    }
 
-    // The page being left can still be on screen for a moment, so check a few times.
+    // Focus can fail while Virtuoso keeps the list hidden, so try until it lands.
     let attempts = 0;
     let timeout: ReturnType<typeof setTimeout>;
     const attempt = () => {
       if (!arrivalRequest) return;
-      if (findList()?.getAttribute(FOCUS_LIST_ATTRIBUTE) === listId) {
+      const list = document.querySelector(`[${FOCUS_LIST_ATTRIBUTE}="${listId}"]`);
+      if ((list && list.contains(document.activeElement)) || ++attempts > 10) {
         arrivalRequest = null;
-        handlerRef.current();
-      } else if (++attempts < 10) {
-        timeout = setTimeout(attempt, 100);
+        return;
       }
+      if (list && findList() === list) handlerRef.current();
+      timeout = setTimeout(attempt, 150);
     };
     timeout = setTimeout(attempt, 0);
     return () => clearTimeout(timeout);
-  }, [listId, locationKey, ready, requestCount]);
+  }, [listId, pathname, locationKey, ready, requestCount]);
 };
 
 export {

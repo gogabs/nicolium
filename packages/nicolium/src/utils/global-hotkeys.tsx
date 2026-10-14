@@ -1,4 +1,4 @@
-import { useNavigate, useRouter } from '@tanstack/react-router';
+import { type NavigateOptions, useNavigate, useRouter } from '@tanstack/react-router';
 import React, { useMemo } from 'react';
 
 import { FOCUS_EDITOR_EVENT } from '@/components/compose/editor/focus-event';
@@ -93,9 +93,13 @@ const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
       }
     };
 
-    /** Move focus to the start of the list on the page opened by a "go to" hotkey. */
-    const focusNewestOnArrival = () => {
-      requestFocusNewestOnArrival(router.state.location.state.key);
+    /** Open a page and move focus to the start of its list, for "go to" hotkeys. */
+    const goTo = (options: NavigateOptions) => {
+      requestFocusNewestOnArrival(
+        router.buildLocation(options).pathname,
+        router.state.location.state.key,
+      );
+      navigate(options);
     };
 
     const handleHotkeyToggleHelp = () => {
@@ -103,40 +107,33 @@ const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
     };
 
     const handleHotkeyGoToHome = () => {
-      focusNewestOnArrival();
-      navigate({ to: '/' });
+      goTo({ to: '/' });
     };
 
     const handleHotkeyGoToNotifications = () => {
-      focusNewestOnArrival();
-      navigate({ to: '/notifications' });
+      goTo({ to: '/notifications' });
     };
 
     const handleHotkeyGoToFavourites = () => {
       if (!account) return;
-      focusNewestOnArrival();
-      navigate({ to: '/@{$username}/favorites', params: { username: account.acct } });
+      goTo({ to: '/@{$username}/favorites', params: { username: account.acct } });
     };
 
     const handleHotkeyGoToProfile = () => {
       if (!account) return;
-      focusNewestOnArrival();
-      navigate({ to: '/@{$username}', params: { username: account.acct } });
+      goTo({ to: '/@{$username}', params: { username: account.acct } });
     };
 
     const handleHotkeyGoToBlocked = () => {
-      focusNewestOnArrival();
-      navigate({ to: '/blocks' });
+      goTo({ to: '/blocks' });
     };
 
     const handleHotkeyGoToMuted = () => {
-      focusNewestOnArrival();
-      navigate({ to: '/mutes' });
+      goTo({ to: '/mutes' });
     };
 
     const handleHotkeyGoToRequests = () => {
-      focusNewestOnArrival();
-      navigate({ to: '/follow_requests' });
+      goTo({ to: '/follow_requests' });
     };
 
     const handleHotkeyAddColumn = () => {
