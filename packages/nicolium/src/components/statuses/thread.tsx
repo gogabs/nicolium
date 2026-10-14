@@ -187,9 +187,19 @@ const Thread = ({
         offset: -146,
       });
 
-      setTimeout(() => {
+      // Focus can fail while Virtuoso keeps the list hidden, so try until it lands.
+      // Leave focus alone once the user has moved it, eg. when replies load later.
+      const focusStatus = (attempts = 0) => {
+        const active = document.activeElement;
+        if (active && active !== document.body && active.tagName !== 'MAIN') return;
+
         node.current?.querySelector<HTMLElement>('.thread__focused article')?.focus();
-      }, 100);
+        if (document.activeElement === active && attempts < 10) {
+          setTimeout(() => focusStatus(attempts + 1), 100);
+        }
+      };
+
+      setTimeout(focusStatus, 100);
     }, 0);
   }, [status.id, statusIndex]);
 

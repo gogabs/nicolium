@@ -1,4 +1,4 @@
-import { useNavigate, useRouter } from '@tanstack/react-router';
+import { type NavigateOptions, useNavigate, useRouter } from '@tanstack/react-router';
 import React, { useMemo } from 'react';
 
 import { FOCUS_EDITOR_EVENT } from '@/components/compose/editor/focus-event';
@@ -9,7 +9,7 @@ import { useModalsActions } from '@/stores/modals';
 
 import { Hotkeys } from '../components/hotkeys';
 
-import { focusNewestInList } from './focus-newest';
+import { focusNewestInList, requestFocusNewestOnArrival } from './focus-newest';
 
 // const keyMap = {
 //   help: '?',
@@ -44,7 +44,8 @@ interface IGlobalHotkeys {
 
 const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
   const navigate = useNavigate();
-  const { history } = useRouter();
+  const router = useRouter();
+  const { history } = router;
   const { data: account } = useOwnAccount();
   const { openModal } = useModalsActions();
   const { resetCompose } = useComposeActions();
@@ -92,38 +93,47 @@ const GlobalHotkeys: React.FC<IGlobalHotkeys> = ({ children, node }) => {
       }
     };
 
+    /** Open a page and move focus to the start of its list, for "go to" hotkeys. */
+    const goTo = (options: NavigateOptions) => {
+      requestFocusNewestOnArrival(
+        router.buildLocation(options).pathname,
+        router.state.location.state.key,
+      );
+      navigate(options);
+    };
+
     const handleHotkeyToggleHelp = () => {
       openModal('HOTKEYS');
     };
 
     const handleHotkeyGoToHome = () => {
-      navigate({ to: '/' });
+      goTo({ to: '/' });
     };
 
     const handleHotkeyGoToNotifications = () => {
-      navigate({ to: '/notifications' });
+      goTo({ to: '/notifications' });
     };
 
     const handleHotkeyGoToFavourites = () => {
       if (!account) return;
-      navigate({ to: '/@{$username}/favorites', params: { username: account.acct } });
+      goTo({ to: '/@{$username}/favorites', params: { username: account.acct } });
     };
 
     const handleHotkeyGoToProfile = () => {
       if (!account) return;
-      navigate({ to: '/@{$username}', params: { username: account.acct } });
+      goTo({ to: '/@{$username}', params: { username: account.acct } });
     };
 
     const handleHotkeyGoToBlocked = () => {
-      navigate({ to: '/blocks' });
+      goTo({ to: '/blocks' });
     };
 
     const handleHotkeyGoToMuted = () => {
-      navigate({ to: '/mutes' });
+      goTo({ to: '/mutes' });
     };
 
     const handleHotkeyGoToRequests = () => {
-      navigate({ to: '/follow_requests' });
+      goTo({ to: '/follow_requests' });
     };
 
     const handleHotkeyAddColumn = () => {

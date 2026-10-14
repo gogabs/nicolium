@@ -1,4 +1,4 @@
-import { useLocation } from '@tanstack/react-router';
+import { useLocation, useMatch } from '@tanstack/react-router';
 import { debounce } from 'lodash-es';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -15,7 +15,12 @@ import LoadMore from '@/components/load-more';
 import Spinner from '@/components/ui/spinner';
 import { useColumnScrollParent } from '@/contexts/multi-column-context';
 import { useSettings } from '@/stores/settings';
-import { FOCUS_LIST_ATTRIBUTE, focusListItem, useFocusNewest } from '@/utils/focus-newest';
+import {
+  FOCUS_LIST_ATTRIBUTE,
+  focusListItem,
+  useFocusNewest,
+  useFocusNewestOnArrival,
+} from '@/utils/focus-newest';
 import { selectChild } from '@/utils/scroll-utils';
 
 import { EmptyMessage } from './empty-message';
@@ -36,6 +41,8 @@ type Context = {
 type SavedScrollPosition = {
   index: number;
   offset: number;
+  /** Index of the item which last had focus, restored when navigating back. */
+  focusedIndex?: number | null;
 };
 
 /** Custom Virtuoso Item component representing a single scrollable item. */
@@ -165,10 +172,15 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
   ) => {
     const { autoloadMore } = useSettings();
     const { state: locationState } = useLocation();
+    const pathname = useMatch({ strict: false, select: (match) => match.pathname });
     const scrollParent = useColumnScrollParent() || params.customScrollParent;
     const node = useRef<VirtuosoHandle | null>(null);
     const [printing, setPrinting] = useState(false);
     const listId = useId();
+
+    /** Rendered item with the given index. */
+    const getItem = (index: number) =>
+      document.querySelector(`[${FOCUS_LIST_ATTRIBUTE}="${listId}"] [data-index="${index}"]`);
 
     /**
      * Focus the first item with something focusable in it (skipping eg. padding items),
@@ -189,6 +201,13 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
     };
 
     useFocusNewest(listId, onFocusNewest ?? focusFirstItem);
+    useFocusNewestOnArrival(
+      listId,
+      pathname,
+      locationState.key,
+      !showLoading,
+      onFocusNewest ?? focusFirstItem,
+    );
 
     // Preserve scroll position
     const scrollDataKey = `nicolium:scrollData:${scrollKey}:${locationState.key}`;
@@ -198,6 +217,8 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
     );
     const topIndex = useRef<number>(scrollData ? scrollData.index : 0);
     const topOffset = useRef<number>(scrollData ? scrollData.offset : 0);
+    const focusedIndex = useRef<number | null>(scrollData?.focusedIndex ?? null);
+    const pendingFocusRestore = useRef<number | null>(focusedIndex.current);
 
     /** Normalized children. */
     const elements = Array.from(children || []);
@@ -243,11 +264,61 @@ const ScrollableList = React.forwardRef<VirtuosoHandle, IScrollableList>(
 
       return () => {
         if (scrollKey) {
-          const data: SavedScrollPosition = { index: topIndex.current, offset: topOffset.current };
+          const data: SavedScrollPosition = {
+            index: topIndex.current,
+            offset: topOffset.current,
+            focusedIndex: focusedIndex.current,
+          };
           sessionStorage.setItem(scrollDataKey, JSON.stringify(data));
         }
       };
     }, []);
+
+    // Remember the item which last had focus, so it gets focus back when navigating back.
+    useEffect(() => {
+      if (!scrollKey) return;
+
+      const handleFocusIn = (e: FocusEvent) => {
+        const item = (e.target as Element | null)
+          ?.closest(`[${FOCUS_LIST_ATTRIBUTE}="${listId}"] [data-index]`)
+          ?.getAttribute('data-index');
+        if (item) focusedIndex.current = Number(item);
+      };
+
+      document.addEventListener('focusin', handleFocusIn);
+      return () => document.removeEventListener('focusin', handleFocusIn);
+    }, [scrollKey, listId]);
+
+    // Give focus back to the item which had it before navigating away.
+    useEffect(() => {
+      const index = pendingFocusRestore.current;
+      if (index === null || showLoading || index >= data.length) return;
+
+      let attempts = 0;
+      let timeout: ReturnType<typeof setTimeout>;
+      const attempt = () => {
+        // Don't steal focus from something the user or the page has focused meanwhile.
+        const active = document.activeElement;
+        const focusTaken = active && active !== document.body && active.tagName !== 'MAIN';
+
+        if (focusTaken || focusListItem(getItem(index))) {
+          pendingFocusRestore.current = null;
+        } else if (++attempts < 5) {
+          // The item might not be rendered yet.
+          timeout = setTimeout(attempt, 100);
+        } else {
+          // Or it is out of the rendered range.
+          pendingFocusRestore.current = null;
+          node.current?.scrollIntoView({
+            index,
+            align: 'center',
+            done: () => focusListItem(getItem(index)),
+          });
+        }
+      };
+      timeout = setTimeout(attempt, 0);
+      return () => clearTimeout(timeout);
+    }, [showLoading, data.length]);
 
     useEffect(() => {
       const beforeprint = () => {
