@@ -1,6 +1,6 @@
 import { useFloating, shift, autoUpdate, flip } from '@floating-ui/react';
 import iconSmiley from '@phosphor-icons/core/regular/smiley.svg';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
@@ -51,11 +51,27 @@ const EmojiPicker: React.FC<IEmojiPicker> = ({ emoji, emojiUrl, ...props }) => {
     setVisible(false);
   });
 
-  const handleToggle: React.KeyboardEventHandler<HTMLButtonElement> &
-    React.MouseEventHandler<HTMLButtonElement> = (e) => {
+  const handleToggle: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
     setVisible(!visible);
   };
+
+  // Return focus to the button when the picker closes with focus inside it
+  const wasVisible = useRef(false);
+  useEffect(() => {
+    if (wasVisible.current && !visible) {
+      const { activeElement } = document;
+      if (
+        !activeElement ||
+        activeElement === document.body ||
+        refs.floating.current?.contains(activeElement)
+      ) {
+        refs.domReference.current?.focus();
+      }
+    }
+
+    wasVisible.current = visible;
+  }, [visible]);
 
   return (
     <div className='edit-bookmark-folder-modal__emoji-picker'>
@@ -63,10 +79,10 @@ const EmojiPicker: React.FC<IEmojiPicker> = ({ emoji, emojiUrl, ...props }) => {
         ref={refs.setReference}
         title={title}
         aria-label={title}
+        aria-haspopup='dialog'
         aria-expanded={visible}
         onClick={handleToggle}
-        onKeyDown={handleToggle}
-        tabIndex={0}
+        type='button'
       >
         {emoji ? <Emoji emoji={emoji} src={emojiUrl} /> : <Icon src={iconSmiley} />}
       </button>
