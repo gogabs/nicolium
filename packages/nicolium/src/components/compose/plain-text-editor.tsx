@@ -136,6 +136,11 @@ const PlainTextEditor = React.forwardRef<PlainTextEditorHandle, IPlainTextEditor
         const completion = `${isNativeEmoji(emoji) ? emoji.native : emoji.colons} `;
         const caret = input?.selectionStart ?? value.length;
         setText(`${value.slice(0, caret)}${completion}${value.slice(caret)}`);
+        // Go back to writing, with the caret after the emoji.
+        input?.focus();
+        requestAnimationFrame(() => {
+          input?.setSelectionRange(caret + completion.length, caret + completion.length);
+        });
       },
     }));
 

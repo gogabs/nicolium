@@ -6,7 +6,15 @@ import iconPencilSimple from '@phosphor-icons/core/regular/pencil-simple.svg';
 import iconPlus from '@phosphor-icons/core/regular/plus.svg';
 import iconX from '@phosphor-icons/core/regular/x.svg';
 import clsx from 'clsx';
-import { $getNodeByKey, CLEAR_EDITOR_COMMAND, TextNode, type LexicalEditor } from 'lexical';
+import {
+  $getNodeByKey,
+  $getRoot,
+  $getSelection,
+  $isRangeSelection,
+  CLEAR_EDITOR_COMMAND,
+  TextNode,
+  type LexicalEditor,
+} from 'lexical';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { length } from 'stringz';
@@ -341,9 +349,16 @@ const ComposeForm = <ID extends string>({
     const editor = editorRef.current;
     if (!editor) return;
 
-    editor.update(() => {
-      editor.getEditorState()._selection?.insertNodes([$createEmojiNode(data), new TextNode(' ')]);
-    });
+    editor.update(
+      () => {
+        // If the editor was never focused there is no selection yet, so insert at the end.
+        if (!$isRangeSelection($getSelection())) $getRoot().selectEnd();
+        $getSelection()?.insertNodes([$createEmojiNode(data), new TextNode(' ')]);
+      },
+      { discrete: true },
+    );
+    // Go back to writing instead of leaving focus on the emoji button.
+    editor.focus();
   };
 
   const onPaste = (files: FileList) => {
