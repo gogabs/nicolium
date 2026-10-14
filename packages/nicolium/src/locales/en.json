@@ -1036,6 +1036,8 @@
   "compose.submit.fail": "Failed to submit your post",
   "compose.submit.fail.view_drafts": "View drafts",
   "compose.submit.success": "Your post was sent!",
+  "compose.suggestions.count": "{count, plural, one {# suggestion} other {# suggestions}}, use the up and down arrows to choose and Enter to insert",
+  "compose.suggestions.label": "Suggestions",
   "compose.thread.success": "Your thread was sent!",
   "compose.thread.too_long": "One of the posts in your thread is too long.",
   "compose_column.overwrite.compose_in_modal": "Compose in a modal",

@@ -27,10 +27,12 @@ import React, {
   type ReactPortal,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
 import ReactDOM from 'react-dom';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { saveSettings } from '@/actions/settings';
 import AutosuggestEmoji from '@/components/autosuggest-emoji';
@@ -48,6 +50,15 @@ import { $createMentionNode } from '../nodes/mention-node';
 
 import type { AutoSuggestion } from '@/components/autosuggest-input';
 import type { Emoji } from '@/emoji';
+
+const messages = defineMessages({
+  suggestions: { id: 'compose.suggestions.label', defaultMessage: 'Suggestions' },
+  suggestionsCount: {
+    id: 'compose.suggestions.count',
+    defaultMessage:
+      '{count, plural, one {# suggestion} other {# suggestions}}, use the up and down arrows to choose and Enter to insert',
+  },
+});
 
 type QueryMatch = {
   leadOffset: number;
@@ -217,27 +228,18 @@ const useMenuAnchorRef = (
       containerDiv.style.width = `${width}px`;
 
       if (!containerDiv.isConnected) {
-        containerDiv.setAttribute('aria-label', 'Typeahead menu');
-        containerDiv.setAttribute('id', 'typeahead-menu');
-        containerDiv.setAttribute('role', 'listbox');
         containerDiv.style.display = 'block';
         containerDiv.style.position = 'absolute';
         document.body.append(containerDiv);
       }
       anchorElementRef.current = containerDiv;
-      rootElement.setAttribute('aria-controls', 'typeahead-menu');
     }
   }, [editor, resolution]);
 
   useEffect(() => {
-    const rootElement = editor.getRootElement();
     if (resolution !== null) {
       positionMenu();
       return () => {
-        if (rootElement !== null) {
-          rootElement.removeAttribute('aria-controls');
-        }
-
         const containerDiv = anchorElementRef.current;
         if (containerDiv !== null && containerDiv.isConnected) {
           containerDiv.remove();
@@ -272,6 +274,8 @@ const AutosuggestPlugin = ({
   setSuggestionsHidden,
 }: AutosuggestPluginProps): React.JSX.Element | null => {
   const { rememberEmojiUse } = useSettingsStoreActions();
+  const intl = useIntl();
+  const listboxId = useId();
 
   const [editor] = useLexicalComposerContext();
   const [resolution, setResolution] = useState<Resolution | null>(null);
@@ -281,6 +285,10 @@ const AutosuggestPlugin = ({
   const anchorElementRef = useMenuAnchorRef(resolution, setResolution);
   const scopeUrl = useScopeUrl();
 
+  const isListVisible = resolution !== null && !suggestionsHidden && suggestions.length > 0;
+  const activeIndex = Math.min(selectedSuggestion, suggestions.length - 1);
+  const getOptionId = (index: number) => `${listboxId}-option-${index}`;
+
   const handleSelectSuggestion: React.MouseEventHandler<HTMLDivElement> = (e) => {
     e.preventDefault();
     const index = Number(e.currentTarget.getAttribute('data-index'));
@@ -289,6 +297,7 @@ const AutosuggestPlugin = ({
 
   const onSelectSuggestion = (index: number) => {
     const suggestion = suggestions[index];
+    if (suggestion === undefined) return;
 
     editor.update(() => {
       const state = editor.getEditorState();
@@ -375,12 +384,14 @@ const AutosuggestPlugin = ({
 
     return (
       <div
-        role='button'
-        tabIndex={0}
+        role='option'
+        tabIndex={-1}
+        id={getOptionId(i)}
+        aria-selected={i === activeIndex}
         key={key}
         data-index={i}
         className={clsx('compose-editor__suggestion', {
-          'compose-editor__suggestion--selected': i === selectedSuggestion,
+          'compose-editor__suggestion--selected': i === activeIndex,
         })}
         onMouseDown={handleSelectSuggestion}
       >
@@ -439,7 +450,26 @@ const AutosuggestPlugin = ({
 
   useEffect(() => {
     if (suggestions && suggestions.length > 0) setSuggestionsHidden(false);
+    setSelectedSuggestion(0);
   }, [suggestions]);
+
+  // Let screen readers follow the highlighted suggestion while focus stays in the editor.
+  useEffect(() => {
+    const rootElement = editor.getRootElement();
+    if (rootElement === null) return;
+
+    rootElement.setAttribute('aria-autocomplete', 'list');
+
+    if (!isListVisible) return;
+
+    rootElement.setAttribute('aria-controls', listboxId);
+    rootElement.setAttribute('aria-activedescendant', getOptionId(activeIndex));
+
+    return () => {
+      rootElement.removeAttribute('aria-controls');
+      rootElement.removeAttribute('aria-activedescendant');
+    };
+  }, [editor, isListVisible, activeIndex, listboxId]);
 
   useEffect(() => {
     if (resolution !== null && !suggestionsHidden && suggestions.length) {
@@ -459,46 +489,35 @@ const AutosuggestPlugin = ({
   }, [resolution, suggestionsHidden, !suggestions.length]);
 
   useEffect(() => {
-    if (resolution === null) return;
+    if (!isListVisible) return;
 
     return mergeRegister(
       editor.registerCommand<KeyboardEvent>(
         KEY_ARROW_UP_COMMAND,
-        (payload) => {
-          const event = payload;
-          if (suggestions !== null && suggestions.length && selectedSuggestion !== null) {
-            const newSelectedSuggestion =
-              selectedSuggestion !== 0 ? selectedSuggestion - 1 : suggestions.length - 1;
-            setSelectedSuggestion(newSelectedSuggestion);
-            event.preventDefault();
-            event.stopImmediatePropagation();
-          }
+        (event) => {
+          setSelectedSuggestion(activeIndex !== 0 ? activeIndex - 1 : suggestions.length - 1);
+          event.preventDefault();
+          event.stopImmediatePropagation();
           return true;
         },
         COMMAND_PRIORITY_NORMAL,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_ARROW_DOWN_COMMAND,
-        (payload) => {
-          const event = payload;
-          if (suggestions !== null && suggestions.length && selectedSuggestion !== null) {
-            const newSelectedSuggestion =
-              selectedSuggestion !== suggestions.length - 1 ? selectedSuggestion + 1 : 0;
-            setSelectedSuggestion(newSelectedSuggestion);
-            event.preventDefault();
-            event.stopImmediatePropagation();
-          }
+        (event) => {
+          setSelectedSuggestion(activeIndex !== suggestions.length - 1 ? activeIndex + 1 : 0);
+          event.preventDefault();
+          event.stopImmediatePropagation();
           return true;
         },
         COMMAND_PRIORITY_NORMAL,
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_TAB_COMMAND,
-        (payload) => {
-          const event = payload;
+        (event) => {
           event.preventDefault();
           event.stopImmediatePropagation();
-          onSelectSuggestion(selectedSuggestion);
+          onSelectSuggestion(activeIndex);
           setResolution(null);
           return true;
         },
@@ -506,11 +525,10 @@ const AutosuggestPlugin = ({
       ),
       editor.registerCommand<KeyboardEvent | null>(
         KEY_ENTER_COMMAND,
-        (payload) => {
-          const event = payload;
+        (event) => {
           event?.preventDefault();
           event?.stopImmediatePropagation();
-          onSelectSuggestion(selectedSuggestion);
+          onSelectSuggestion(activeIndex);
           setResolution(null);
           return true;
         },
@@ -518,8 +536,7 @@ const AutosuggestPlugin = ({
       ),
       editor.registerCommand<KeyboardEvent>(
         KEY_ESCAPE_COMMAND,
-        (payload) => {
-          const event = payload;
+        (event) => {
           event.preventDefault();
           event.stopImmediatePropagation();
           setResolution(null);
@@ -528,26 +545,39 @@ const AutosuggestPlugin = ({
         COMMAND_PRIORITY_NORMAL,
       ),
     );
-  }, [editor, suggestions, selectedSuggestion, resolution]);
+  }, [editor, suggestions, activeIndex, isListVisible]);
 
-  return resolution === null || editor === null ? null : (
-    <LexicalPopoverMenu
-      anchorElementRef={anchorElementRef}
-      menuRenderFn={(anchorElementRef) =>
-        anchorElementRef.current
-          ? ReactDOM.createPortal(
-              <div
-                className={clsx('compose-editor__suggestions', {
-                  'compose-editor__suggestions--hidden': suggestionsHidden || !suggestions.length,
-                })}
-              >
-                {suggestions.map(renderSuggestion)}
-              </div>,
-              anchorElementRef.current,
-            )
-          : null
-      }
-    />
+  return (
+    <>
+      <output className='sr-only' aria-live='polite' aria-atomic='true'>
+        {isListVisible
+          ? intl.formatMessage(messages.suggestionsCount, { count: suggestions.length })
+          : ''}
+      </output>
+      {resolution !== null && (
+        <LexicalPopoverMenu
+          anchorElementRef={anchorElementRef}
+          menuRenderFn={(anchorElementRef) =>
+            anchorElementRef.current
+              ? ReactDOM.createPortal(
+                  <div
+                    id={listboxId}
+                    role='listbox'
+                    aria-label={intl.formatMessage(messages.suggestions)}
+                    className={clsx('compose-editor__suggestions', {
+                      'compose-editor__suggestions--hidden':
+                        suggestionsHidden || !suggestions.length,
+                    })}
+                  >
+                    {suggestions.map(renderSuggestion)}
+                  </div>,
+                  anchorElementRef.current,
+                )
+              : null
+          }
+        />
+      )}
+    </>
   );
 };
 
